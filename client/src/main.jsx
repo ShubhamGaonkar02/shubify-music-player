@@ -5,9 +5,11 @@ import { dark } from '@clerk/themes';
 import App from './App.jsx';
 import './index.css';
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY =
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY ||
+  'pk_test_YWR2YW5jZWQtdHJvbGwtMTc5MC5jbGVyay5hY2NvdW50cy5kZXYk';
 
-const isKeyConfigured = PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('YOUR_CLERK_PUBLISHABLE_KEY');
+const isKeyConfigured = Boolean(PUBLISHABLE_KEY && !PUBLISHABLE_KEY.includes('YOUR_CLERK_PUBLISHABLE_KEY'));
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
