@@ -57,8 +57,8 @@ A Node.js framework used to create backend APIs and handle requests from the fro
 
 ## Authentication
 
-### Firebase Authentication
-Provides secure user registration, login, and session management.
+### Clerk
+Provides modern, secure user registration, multi-factor authentication, social logins (Google, Apple, etc.), session management, and profile controls.
 
 ---
 

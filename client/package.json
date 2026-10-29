@@ -9,8 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.61.11",
+    "@clerk/themes": "^2.4.57",
     "axios": "^1.6.0",
-    "firebase": "^12.16.0",
     "framer-motion": "^10.16.0",
     "lucide-react": "^0.292.0",
     "react": "^18.2.0",

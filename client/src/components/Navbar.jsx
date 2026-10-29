@@ -1,208 +1,132 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Sun, Moon, LogOut, ShieldCheck, ChevronDown, Plus, Trash2 } from 'lucide-react';
+import React from 'react';
+import { ChevronLeft, ChevronRight, Sun, Moon, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { UserButton, useUser } from '@clerk/clerk-react';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
-import DeleteAccountModal from './DeleteAccountModal';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme, openCreatePlaylistModal } = usePlayerStore();
-  const { user, logout } = useAuthStore();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  const userPhoto =
-    user?.photoURL ||
-    `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.displayName || 'User')}`;
+  const { user } = useAuthStore();
+  const { isSignedIn } = useUser();
 
   return (
-    <>
-      <nav
-        className={`h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 backdrop-blur-md transition-colors ${
-          theme === 'light'
-            ? 'bg-white/95 border-b border-slate-200 text-slate-900 shadow-sm'
-            : 'bg-[#121212]/90 text-white'
-        }`}
-      >
-        {/* Mobile Brand Logo / Left Nav History */}
-        <div className="flex items-center gap-3">
-          {/* Mobile Shubify Logo (Hidden on desktop since desktop has Sidebar) */}
-          <div
-            onClick={() => navigate('/')}
-            className="flex md:hidden items-center gap-2 cursor-pointer"
-          >
-            <img src="/logo.png" alt="Shubify" className="w-8 h-8 object-contain drop-shadow" />
-            <span className="font-black text-lg tracking-tight animate-wave-text">Shubify</span>
-          </div>
-
-          {/* Navigation History Controls */}
-          <div className="hidden sm:flex gap-2">
-            <button
-              onClick={() => navigate(-1)}
-              className={`rounded-full p-1.5 transition-colors ${
-                theme === 'light'
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                  : 'bg-black/40 text-gray-400 hover:text-white'
-              }`}
-              title="Go back"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={() => navigate(1)}
-              className={`rounded-full p-1.5 transition-colors ${
-                theme === 'light'
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                  : 'bg-black/40 text-gray-400 hover:text-white'
-              }`}
-              title="Go forward"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
+    <nav
+      className={`h-16 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 backdrop-blur-md transition-colors ${
+        theme === 'light'
+          ? 'bg-white/95 border-b border-slate-200 text-slate-900 shadow-sm'
+          : 'bg-[#121212]/90 text-white'
+      }`}
+    >
+      {/* Mobile Brand Logo / Left Nav History */}
+      <div className="flex items-center gap-3">
+        {/* Mobile Shubify Logo (Hidden on desktop since desktop has Sidebar) */}
+        <div
+          onClick={() => navigate('/')}
+          className="flex md:hidden items-center gap-2 cursor-pointer"
+        >
+          <img src="/logo.png" alt="Shubify" className="w-8 h-8 object-contain drop-shadow" />
+          <span className="font-black text-lg tracking-tight animate-wave-text">Shubify</span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Mobile Create Playlist Button */}
-          {user && (
-            <button
-              onClick={openCreatePlaylistModal}
-              className="flex md:hidden items-center gap-1 bg-spotify-base hover:bg-spotify-highlight text-black font-extrabold text-xs px-3 py-1.5 rounded-full shadow hover:scale-105 transition-all"
-              title="Create New Playlist"
-            >
-              <Plus size={15} />
-              <span>Create</span>
-            </button>
-          )}
-
-          {/* Light / Dark Mode Toggle Button */}
+        {/* Navigation History Controls */}
+        <div className="hidden sm:flex gap-2">
           <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full flex items-center gap-1.5 text-xs font-black transition-all shadow-sm ${
+            onClick={() => navigate(-1)}
+            className={`rounded-full p-1.5 transition-colors ${
               theme === 'light'
-                ? 'bg-slate-100 text-slate-900 hover:bg-slate-200 border border-slate-300'
-                : 'bg-[#282828] text-yellow-400 hover:bg-[#383838] border border-white/10'
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                : 'bg-black/40 text-gray-400 hover:text-white'
             }`}
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            title="Go back"
           >
-            {theme === 'light' ? (
-              <Moon size={16} className="fill-current text-slate-900" />
-            ) : (
-              <Sun size={16} className="fill-current text-yellow-400" />
-            )}
-            <span className="hidden md:inline">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+            <ChevronLeft size={20} />
           </button>
-
-          {/* User Profile & Logout Dropdown */}
-          {user ? (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className={`flex items-center gap-2 p-1 pr-2.5 rounded-full transition-all shadow-sm border ${
-                  theme === 'light'
-                    ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-900'
-                    : 'bg-black/80 hover:bg-[#282828] border-white/10 text-white'
-                }`}
-                title="User Account Menu"
-              >
-                <img
-                  src={userPhoto}
-                  alt={user.displayName || 'User Avatar'}
-                  className="w-7 h-7 rounded-full object-cover shadow"
-                />
-                <span className="text-xs font-extrabold max-w-[100px] truncate hidden sm:inline">
-                  {user.displayName || 'Account'}
-                </span>
-                <ChevronDown size={14} className="text-gray-400" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div
-                  className={`absolute right-0 mt-2 w-60 rounded-2xl p-2 shadow-2xl border z-50 animate-fadeIn ${
-                    theme === 'light'
-                      ? 'bg-white border-slate-200 text-slate-900'
-                      : 'bg-[#18181b] border-white/10 text-white'
-                  }`}
-                >
-                  {/* User Info Card */}
-                  <div className="px-3 py-3 border-b border-gray-200/20 mb-1">
-                    <p className="text-xs font-black truncate">{user.displayName || 'User'}</p>
-                    <p className="text-[11px] text-gray-400 truncate mt-0.5">{user.email}</p>
-                    <div className="mt-2 flex items-center gap-1.5 text-[10px] text-spotify-base font-bold bg-spotify-base/10 px-2 py-1 rounded-md w-max">
-                      <ShieldCheck size={12} />
-                      <span>{user.provider === 'google.com' ? 'Google Authenticated' : 'Shubify User'}</span>
-                    </div>
-                  </div>
-
-                  {/* Log Out Button */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-extrabold text-slate-700 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-white/10 transition-colors"
-                  >
-                    <LogOut size={16} />
-                    <span>Log out</span>
-                  </button>
-
-                  {/* Delete Account Button */}
-                  <button
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      setIsDeleteModalOpen(true);
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-extrabold text-red-500 hover:bg-red-500/10 transition-colors mt-1 border-t border-gray-200/10 pt-2"
-                  >
-                    <Trash2 size={16} />
-                    <span>Delete Account</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate('/login')}
-                className={`font-bold text-xs sm:text-sm transition-colors ${
-                  theme === 'light' ? 'text-slate-700 hover:text-spotify-base' : 'text-gray-400 hover:text-spotify-base'
-                }`}
-              >
-                Sign up
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                className="bg-spotify-base text-black font-extrabold text-xs sm:text-sm px-4 py-1.5 sm:px-6 sm:py-2 rounded-full hover:scale-105 transition-transform shadow-md"
-              >
-                Log in
-              </button>
-            </div>
-          )}
+          <button
+            onClick={() => navigate(1)}
+            className={`rounded-full p-1.5 transition-colors ${
+              theme === 'light'
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                : 'bg-black/40 text-gray-400 hover:text-white'
+            }`}
+            title="Go forward"
+          >
+            <ChevronRight size={20} />
+          </button>
         </div>
-      </nav>
+      </div>
 
-      {/* Delete Account Confirmation Modal */}
-      <DeleteAccountModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-      />
-    </>
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Mobile Create Playlist Button */}
+        {(isSignedIn || user) && (
+          <button
+            onClick={openCreatePlaylistModal}
+            className="flex md:hidden items-center gap-1 bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs px-3 py-1.5 rounded-full shadow hover:scale-105 transition-all"
+            title="Create New Playlist"
+          >
+            <Plus size={15} />
+            <span>Create</span>
+          </button>
+        )}
+
+        {/* Light / Dark Mode Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className={`p-2 rounded-full flex items-center gap-1.5 text-xs font-black transition-all shadow-sm ${
+            theme === 'light'
+              ? 'bg-slate-100 text-slate-900 hover:bg-slate-200 border border-slate-300'
+              : 'bg-[#282828] text-yellow-400 hover:bg-[#383838] border border-white/10'
+          }`}
+          title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+        >
+          {theme === 'light' ? (
+            <Moon size={16} className="fill-current text-slate-900" />
+          ) : (
+            <Sun size={16} className="fill-current text-yellow-400" />
+          )}
+          <span className="hidden md:inline">{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+        </button>
+
+        {/* Clerk User Button & Profile */}
+        {isSignedIn || user ? (
+          <div className="flex items-center pl-1">
+            <UserButton
+              afterSignOutUrl="/login"
+              showName={true}
+              appearance={{
+                elements: {
+                  avatarBox: 'w-8 h-8 rounded-full border border-white/20 shadow-sm',
+                  userButtonBox: 'flex items-center gap-2',
+                  userButtonOuterIdentifier: `${
+                    theme === 'light' ? 'text-slate-900' : 'text-white'
+                  } text-xs font-extrabold max-w-[120px] truncate hidden sm:inline`,
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/signup')}
+              className={`font-bold text-xs sm:text-sm transition-colors ${
+                theme === 'light'
+                  ? 'text-slate-700 hover:text-[#1ed760]'
+                  : 'text-gray-400 hover:text-[#1ed760]'
+              }`}
+            >
+              Sign up
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="bg-[#1ed760] text-black font-extrabold text-xs sm:text-sm px-4 py-1.5 sm:px-6 sm:py-2 rounded-full hover:scale-105 transition-transform shadow-md"
+            >
+              Log in
+            </button>
+          </div>
+        )}
+      </div>
+    </nav>
   );
 };
 
