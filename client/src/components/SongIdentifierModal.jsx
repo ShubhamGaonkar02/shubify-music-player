@@ -10,20 +10,15 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState('listen'); // 'listen' (Shazam audio) or 'hum' (voice/speech)
   const [status, setStatus] = useState('idle'); // 'idle' | 'listening' | 'analyzing' | 'found' | 'not_found' | 'error'
   const [errorMessage, setErrorMessage] = useState('');
-  const [countdown, setCountdown] = useState(7);
+  const [countdown, setCountdown] = useState(5);
   const [matchedTrack, setMatchedTrack] = useState(null);
   const [speechTranscript, setSpeechTranscript] = useState('');
-  const [voiceLang, setVoiceLang] = useState('en-IN'); // en-IN, hi-IN, mr-IN, ta-IN, te-IN
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [customKey, setCustomKey] = useState(localStorage.getItem('shubify_audd_key') || '');
-  const [manualQuery, setManualQuery] = useState('');
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const streamRef = useRef(null);
   const timerRef = useRef(null);
   const recognitionRef = useRef(null);
-  const activeMimeTypeRef = useRef('audio/webm');
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -31,9 +26,8 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
       setStatus('idle');
       setMatchedTrack(null);
       setErrorMessage('');
-      setCountdown(7);
+      setCountdown(5);
       setSpeechTranscript('');
-      setManualQuery('');
     } else {
       stopAllAudio();
     }
@@ -57,53 +51,19 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSaveKey = (e) => {
-    e.preventDefault();
-    if (customKey.trim()) {
-      localStorage.setItem('shubify_audd_key', customKey.trim());
-    } else {
-      localStorage.removeItem('shubify_audd_key');
-    }
-    setShowKeyInput(false);
-  };
-
-  // 1. High-Fidelity Audio Fingerprint Recognition (Disabling voice filters for raw music)
+  // 1. Audio Fingerprint Recognition (Shazam-style via AudD)
   const startAudioListening = async () => {
     setStatus('listening');
     setErrorMessage('');
     setMatchedTrack(null);
-    setCountdown(7);
+    setCountdown(5);
     audioChunksRef.current = [];
 
     try {
-      // CRITICAL: Turn OFF echoCancellation and noiseSuppression so browsers don't filter out background music!
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: true,
-        },
-      });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      // Detect best supported MIME type across Chrome, Safari, Firefox
-      let mimeType = '';
-      if (typeof MediaRecorder.isTypeSupported === 'function') {
-        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          mimeType = 'audio/webm;codecs=opus';
-        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
-          mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-        } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-          mimeType = 'audio/ogg';
-        }
-      }
-      activeMimeTypeRef.current = mimeType || 'audio/webm';
-
-      const mediaRecorder = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -114,20 +74,25 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
 
       mediaRecorder.onstop = async () => {
         setStatus('analyzing');
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: activeMimeTypeRef.current || 'audio/webm',
-        });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         await analyzeAudioBlob(audioBlob);
       };
 
       mediaRecorder.start(250);
 
-      let timeLeft = 7;
+      let timeLeft = 5;
       timerRef.current = setInterval(() => {
         timeLeft -= 1;
         setCountdown(timeLeft);
         if (timeLeft <= 0) {
-          stopAndAnalyzeEarly();
+          clearInterval(timerRef.current);
+          if (mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+          }
         }
       }, 1000);
     } catch (err) {
@@ -141,27 +106,12 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const stopAndAnalyzeEarly = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try {
-        mediaRecorderRef.current.stop();
-      } catch (e) {}
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-  };
-
   // Send audio sample to AudD Music Recognition API
   const analyzeAudioBlob = async (blob) => {
     try {
       const formData = new FormData();
       formData.append('file', blob);
-
-      const savedUserKey = localStorage.getItem('shubify_audd_key');
-      const apiToken = savedUserKey || import.meta.env.VITE_AUDD_API_KEY || 'test';
+      const apiToken = import.meta.env.VITE_AUDD_API_KEY || 'test';
       formData.append('api_token', apiToken);
       formData.append('return', 'apple_music,spotify');
 
@@ -173,9 +123,9 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
       const data = response.data;
 
       if (data && data.status === 'success' && data.result) {
-        const { title, artist, album } = data.result;
+        const { title, artist, album, song_link } = data.result;
 
-        // Search on Shubify catalog so we get full playback integration with YouTube resolver
+        // Search on Shubify so we get full playback integration with YouTube resolver
         const searchRes = await searchSpotify(`${title} ${artist}`);
         const foundItem = searchRes?.tracks?.items?.[0];
 
@@ -189,36 +139,23 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
             artists: [{ name: artist }],
             album: {
               name: album || 'Identified Track',
-              images: [
-                {
-                  url:
-                    data.result.apple_music?.artwork?.url?.replace('{w}x{h}', '600x600') ||
-                    'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600',
-                },
-              ],
+              images: [{ url: data.result.apple_music?.artwork?.url?.replace('{w}x{h}', '600x600') || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600' }],
             },
             duration_ms: 180000,
           });
         }
         setStatus('found');
-      } else if (data && data.error) {
-        console.warn('AudD API Notice:', data.error);
-        if (data.error.error_code === 900 || data.error.error_code === 901) {
-          setErrorMessage('Demo recognition limit reached (10 free requests/day). Use "Hum or Speak" mode or enter your own free AudD token.');
-        } else {
-          setErrorMessage(data.error.error_message || 'Could not recognize this song.');
-        }
-        setStatus('not_found');
       } else {
         setStatus('not_found');
       }
     } catch (err) {
       console.warn('AudD API Notice:', err);
+      // If network/token limit, provide graceful fallback
       setStatus('not_found');
     }
   };
 
-  // 2. Hum or Speak Mode (Web Speech Recognition with Multi-Language Indian Support)
+  // 2. Hum or Speak Mode (Web Speech Recognition)
   const startHummingRecognition = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -234,9 +171,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
-    recognition.lang = voiceLang; // Use selected Indian language (hi-IN, en-IN, mr-IN, etc.)
-    recognition.interimResults = true;
-    recognition.continuous = false;
+    recognition.lang = 'en-US';
     recognition.interimResults = true;
     recognition.continuous = false;
 
@@ -365,36 +300,6 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
               🎤 Hum or Speak Lyrics
             </button>
           </div>
-
-          {/* Language Selector for Hum / Speak Lyrics */}
-          {mode === 'hum' && status === 'idle' && (
-            <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
-              <span className={`text-[10px] font-bold ${isLight ? 'text-slate-500' : 'text-gray-400'}`}>
-                Singing in:
-              </span>
-              {[
-                { id: 'en-IN', label: 'English / Hinglish' },
-                { id: 'hi-IN', label: 'Hindi (हिंदी)' },
-                { id: 'mr-IN', label: 'Marathi (मराठी)' },
-                { id: 'te-IN', label: 'Telugu' },
-                { id: 'ta-IN', label: 'Tamil' },
-              ].map((lang) => (
-                <button
-                  key={lang.id}
-                  onClick={() => setVoiceLang(lang.id)}
-                  className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-colors ${
-                    voiceLang === lang.id
-                      ? 'bg-[#1ed760] text-black font-black shadow-sm'
-                      : isLight
-                      ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
-                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                  }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Center Interactive Content Area */}
@@ -468,20 +373,6 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
               </p>
               {speechTranscript && (
                 <p className="text-xs text-gray-400 mt-1 italic max-w-xs truncate">"{speechTranscript}"</p>
-              )}
-
-              {/* Match Early Button for Ambient Listen */}
-              {mode === 'listen' && (
-                <button
-                  onClick={stopAndAnalyzeEarly}
-                  className={`mt-4 text-xs font-black px-4 py-1.5 rounded-full border transition-all shadow-sm ${
-                    isLight
-                      ? 'bg-emerald-50 border-emerald-300 text-emerald-950 hover:bg-emerald-100'
-                      : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
-                  }`}
-                >
-                  Identify Now
-                </button>
               )}
             </div>
           )}
@@ -573,76 +464,21 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
 
           {/* STATE: NOT FOUND */}
           {status === 'not_found' && (
-            <div className="flex flex-col items-center text-center w-full">
+            <div className="flex flex-col items-center text-center">
               <div className="w-14 h-14 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mb-3">
                 <Music size={28} />
               </div>
               <h3 className="text-base font-black">Couldn't catch that song</h3>
-              <p className={`text-xs mt-1 max-w-sm ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
-                {errorMessage ||
-                  'Try holding your device closer to the speaker, or type a few lyrics / song title below to find it instantly!'}
+              <p className={`text-xs mt-1 max-w-xs ${isLight ? 'text-slate-600' : 'text-gray-400'}`}>
+                Try holding your device closer to the speaker or use the <strong>"Hum or Speak"</strong> tab to sing the lyrics!
               </p>
-
-              {/* Instant Search Bar Fallback */}
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  if (!manualQuery.trim()) return;
-                  setStatus('analyzing');
-                  try {
-                    const res = await searchSpotify(manualQuery.trim());
-                    const track = res?.tracks?.items?.[0];
-                    if (track) {
-                      setMatchedTrack(track);
-                      setStatus('found');
-                    } else {
-                      setStatus('not_found');
-                    }
-                  } catch (err) {
-                    setStatus('not_found');
-                  }
-                }}
-                className="mt-4 w-full max-w-sm flex items-center gap-2"
+              <button
+                onClick={() => setStatus('idle')}
+                className="mt-4 bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs px-6 py-2.5 rounded-full flex items-center gap-1.5 shadow transition-transform hover:scale-105"
               >
-                <input
-                  type="text"
-                  value={manualQuery}
-                  onChange={(e) => setManualQuery(e.target.value)}
-                  placeholder="Type lyrics or song title..."
-                  className={`flex-1 px-4 py-2.5 rounded-full text-xs font-bold border focus:outline-none focus:ring-2 focus:ring-[#1ed760] ${
-                    isLight
-                      ? 'bg-slate-100 border-slate-300 text-slate-900 placeholder-slate-400'
-                      : 'bg-white/10 border-white/20 text-white placeholder-gray-400'
-                  }`}
-                />
-                <button
-                  type="submit"
-                  className="bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs px-5 py-2.5 rounded-full shadow hover:scale-105 transition-all"
-                >
-                  Search
-                </button>
-              </form>
-
-              <div className="flex items-center gap-2 mt-4">
-                <button
-                  onClick={() => setStatus('idle')}
-                  className="bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs px-5 py-2 rounded-full flex items-center gap-1.5 shadow transition-transform hover:scale-105"
-                >
-                  <RotateCcw size={14} />
-                  <span>Try Again</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setMode('hum');
-                    setStatus('idle');
-                  }}
-                  className={`text-xs font-bold px-4 py-2 rounded-full border transition-colors ${
-                    isLight ? 'border-slate-300 hover:bg-slate-100' : 'border-white/15 hover:bg-white/10'
-                  }`}
-                >
-                  🎤 Try Hum / Speak
-                </button>
-              </div>
+                <RotateCcw size={14} />
+                <span>Try Again</span>
+              </button>
             </div>
           )}
 
@@ -664,47 +500,10 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Custom AudD API Key Settings Drawer */}
-        {showKeyInput && (
-          <form
-            onSubmit={handleSaveKey}
-            className={`p-3 rounded-2xl mb-3 border text-xs flex flex-col gap-2 ${
-              isLight ? 'bg-slate-50 border-slate-200' : 'bg-black/50 border-white/10'
-            }`}
-          >
-            <span className="font-bold">AudD API Key (Optional for unlimited searches):</span>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                value={customKey}
-                onChange={(e) => setCustomKey(e.target.value)}
-                placeholder="Paste your API Token from dashboard.audd.io"
-                className={`flex-1 px-3 py-1.5 rounded-lg border text-xs ${
-                  isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-white/10 border-white/20 text-white'
-                }`}
-              />
-              <button
-                type="submit"
-                className="bg-[#1ed760] text-black font-bold px-3 py-1.5 rounded-lg text-xs"
-              >
-                Save
-              </button>
-            </div>
-          </form>
-        )}
-
         {/* Footer info badge */}
-        <div className={`pt-3 border-t flex items-center justify-between text-[10px] font-semibold ${isLight ? 'border-slate-100 text-slate-400' : 'border-white/5 text-gray-500'}`}>
-          <div className="flex items-center gap-1.5">
-            <Sparkles size={12} className="text-[#1ed760]" />
-            <span>AudD Recognition & Spotify Catalog</span>
-          </div>
-          <button
-            onClick={() => setShowKeyInput(!showKeyInput)}
-            className="hover:underline text-gray-400 hover:text-white"
-          >
-            {customKey ? 'Custom Key Active' : 'API Token Settings'}
-          </button>
+        <div className={`pt-3 border-t flex items-center justify-center gap-2 text-[10px] font-semibold ${isLight ? 'border-slate-100 text-slate-400' : 'border-white/5 text-gray-500'}`}>
+          <Sparkles size={12} className="text-[#1ed760]" />
+          <span>Powered by AudD Audio Recognition & Shubify Stream Engine</span>
         </div>
       </div>
     </div>
