@@ -64,8 +64,8 @@ function MainAppLayout() {
         <div
           className={`fixed bottom-16 md:bottom-0 left-0 right-0 h-[62px] md:h-[90px] border-t z-40 transition-all ${
             theme === 'light'
-              ? 'bg-white border-slate-200 text-slate-900 shadow-xl'
-              : 'bg-[#121212] border-white/10 text-white'
+              ? 'bg-white/95 border-slate-200 text-slate-900 shadow-xl backdrop-blur-md'
+              : 'bg-[#121212]/95 border-white/10 text-white backdrop-blur-md'
           }`}
         >
           <MusicPlayer />
