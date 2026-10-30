@@ -227,9 +227,9 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
   const isLight = theme === 'light';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn overflow-y-auto no-scrollbar">
       <div
-        className={`w-full max-w-lg rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative shadow-2xl border transition-all duration-300 max-h-[92vh] overflow-y-auto custom-scrollbar ${
+        className={`w-full max-w-lg rounded-2xl sm:rounded-3xl p-5 sm:p-8 relative shadow-2xl border transition-all duration-300 max-h-[92vh] overflow-y-auto overflow-x-hidden no-scrollbar ${
           isLight
             ? 'bg-white border-emerald-200 text-slate-900 shadow-[0_20px_50px_rgba(29,185,84,0.15)]'
             : 'bg-[#121214] border-white/10 text-white shadow-2xl'
@@ -273,7 +273,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
                 setStatus('idle');
                 stopAllAudio();
               }}
-              className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${
+              className={`px-5 py-2 text-xs font-black rounded-xl transition-all ${
                 mode === 'listen'
                   ? 'bg-[#1ed760] text-black shadow-md'
                   : isLight
@@ -281,7 +281,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              🎧 Ambient Music (Shazam)
+              🎧 Shazam
             </button>
             <button
               onClick={() => {
@@ -289,7 +289,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
                 setStatus('idle');
                 stopAllAudio();
               }}
-              className={`px-4 py-1.5 text-xs font-bold rounded-xl transition-all ${
+              className={`px-5 py-2 text-xs font-black rounded-xl transition-all ${
                 mode === 'hum'
                   ? 'bg-[#1ed760] text-black shadow-md'
                   : isLight
@@ -297,7 +297,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
                   : 'text-gray-400 hover:text-white'
               }`}
             >
-              🎤 Hum or Speak Lyrics
+              🎤 Hum Song
             </button>
           </div>
         </div>
