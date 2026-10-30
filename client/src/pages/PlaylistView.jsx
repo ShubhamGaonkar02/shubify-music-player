@@ -53,7 +53,7 @@ const presetMetadata = {
   'hindi songs': {
     title: 'Hindi Hits ❤️',
     desc: 'Top Bollywood chartbusters, soulful romantic tracks, and trending Hindi melodies.',
-    img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600',
+    img: 'https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/f6/b8/9c/f6b89cf5-a3ed-2048-cf95-dbec6ac33ead/8902894354158_cover.jpg/600x600bb.jpg',
   },
   'marathi songs': {
     title: 'Marathi Hits 🚩',
