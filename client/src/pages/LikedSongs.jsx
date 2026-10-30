@@ -112,6 +112,7 @@ const LikedSongs = () => {
                 return (
                   <div
                     key={track.id}
+                    onClick={() => handlePlayTrack(track, index)}
                     className={`grid grid-cols-12 items-center p-2 sm:p-3 rounded-xl ${rowHover} group transition-all cursor-pointer ${
                       isCurrent ? activeRow : ''
                     }`}

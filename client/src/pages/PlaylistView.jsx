@@ -162,7 +162,12 @@ const PlaylistView = () => {
   };
 
   const handlePlayTrack = (index) => {
-    playTrackList(tracks, index);
+    const track = tracks[index];
+    if (currentTrack?.id === track?.id) {
+      setIsPlaying(!isPlaying);
+    } else {
+      playTrackList(tracks, index);
+    }
   };
 
   const handleSharePlaylist = async () => {
@@ -350,6 +355,7 @@ const PlaylistView = () => {
                   return (
                     <div
                       key={track.id}
+                      onClick={() => handlePlayTrack(index)}
                       className={`grid grid-cols-12 items-center p-2 sm:p-3 rounded-xl ${rowHover} group cursor-pointer transition-all ${
                         isCurrent ? activeRow : ''
                       }`}
