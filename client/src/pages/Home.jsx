@@ -26,6 +26,11 @@ const Home = () => {
     Party: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600&h=600',
     Sad: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&q=80&w=600&h=600',
     Sufi: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&q=80&w=600&h=600',
+    Hindi: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600',
+    Marathi: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=600&h=600',
+    Telugu: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600&h=600',
+    Tamil: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600&h=600',
+    English: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600&h=600',
   });
 
   useEffect(() => {
@@ -40,6 +45,11 @@ const Home = () => {
         { key: 'Arijit Singh', term: 'Arijit Singh' },
         { key: 'Jubin Nautiyal', term: 'Jubin Nautiyal' },
         { key: 'Badshah', term: 'Badshah' },
+        { key: 'Hindi', term: 'Bollywood Top Hits' },
+        { key: 'Marathi', term: 'Sairat' },
+        { key: 'Telugu', term: 'Pushpa' },
+        { key: 'Tamil', term: 'Leo' },
+        { key: 'English', term: 'Dua Lipa' },
       ];
 
       const newPosters = { ...moviePosters };
@@ -97,6 +107,39 @@ const Home = () => {
     { name: 'Party Bangers 🎉', desc: 'High energy dance hits by Badshah & Honey Singh', query: 'Bollywood Party Songs', imgKey: 'Party' },
     { name: 'Sad & Soulful 🌧️', desc: 'Emotional heart-touching acoustic melodies', query: 'Bollywood Sad Songs', imgKey: 'Sad' },
     { name: 'Sufi & Qawwali 🕉️', desc: 'Spiritual vibes by Nusrat Fateh Ali Khan & AR Rahman', query: 'Bollywood Sufi Qawwali', imgKey: 'Sufi' },
+  ];
+
+  const languageCategories = [
+    {
+      name: 'Hindi Hits 🇮🇳',
+      desc: 'Top Bollywood chartbusters & trending Hindi melodies',
+      query: 'Hindi Songs',
+      imgKey: 'Hindi',
+    },
+    {
+      name: 'Marathi Hits 🚩',
+      desc: 'Popular Marathi chartbusters, Zingaat & Ajay-Atul classics',
+      query: 'Marathi Songs',
+      imgKey: 'Marathi',
+    },
+    {
+      name: 'Telugu Hits 🔥',
+      desc: 'Tollywood blockbusters & energetic dance anthems',
+      query: 'Telugu Songs',
+      imgKey: 'Telugu',
+    },
+    {
+      name: 'Tamil Hits ⚡',
+      desc: 'Kollywood superhits by Anirudh Ravichander & AR Rahman',
+      query: 'Tamil Songs',
+      imgKey: 'Tamil',
+    },
+    {
+      name: 'English Pop 🌍',
+      desc: 'Billboard Hot 100, viral TikTok hits & international pop',
+      query: 'English Songs',
+      imgKey: 'English',
+    },
   ];
 
   const handleOpenPlaylist = (query) => {
@@ -275,6 +318,49 @@ const Home = () => {
                     onClick={(e) => handleQuickPlay(e, item.query)}
                     className="absolute bottom-2 right-2 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 shadow-xl hover:scale-110 z-10"
                     title="Play Category"
+                  >
+                    <Play size={20} fill="black" className="text-black ml-0.5" />
+                  </button>
+                </div>
+                <h3 className={`font-bold mb-1 truncate text-xs sm:text-sm ${textColor}`}>{item.name}</h3>
+                <p className={`text-[11px] sm:text-xs line-clamp-2 ${subTextColor}`}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 4: SEPARATE LANGUAGES & REGIONAL HITS */}
+        <div className="mb-10 sm:mb-12">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className={`text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2 ${textColor}`}>
+              <span>🌐</span> Music by Language & Regional Hits
+            </h2>
+            <button
+              onClick={() => navigate('/search')}
+              className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+                theme === 'light' ? 'text-emerald-800 hover:text-slate-900' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Show all
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 sm:gap-6">
+            {languageCategories.map((item, i) => (
+              <div
+                key={i}
+                onClick={() => handleOpenPlaylist(item.query)}
+                className={`${cardBg} p-3 sm:p-4 rounded-xl cursor-pointer group`}
+              >
+                <div className="relative mb-3 sm:mb-4 pb-[100%] rounded-lg overflow-hidden shadow-lg bg-gray-200">
+                  <img
+                    src={moviePosters[item.imgKey]}
+                    alt={item.name}
+                    className="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <button
+                    onClick={(e) => handleQuickPlay(e, item.query)}
+                    className="absolute bottom-2 right-2 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 shadow-xl hover:scale-110 z-10"
+                    title={`Play ${item.name}`}
                   >
                     <Play size={20} fill="black" className="text-black ml-0.5" />
                   </button>

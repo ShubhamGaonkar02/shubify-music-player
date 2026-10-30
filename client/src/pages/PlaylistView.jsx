@@ -50,6 +50,31 @@ const presetMetadata = {
     desc: 'Top club and dance floor anthems for non-stop energy.',
     img: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600&h=600',
   },
+  'hindi songs': {
+    title: 'Hindi Hits 🇮🇳',
+    desc: 'Top Bollywood chartbusters, soulful romantic tracks, and trending Hindi melodies.',
+    img: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600',
+  },
+  'marathi songs': {
+    title: 'Marathi Hits 🚩',
+    desc: 'Popular Marathi chartbusters, Zingaat, Ajay-Atul classics and modern folk-pop.',
+    img: 'https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&q=80&w=600&h=600',
+  },
+  'telugu songs': {
+    title: 'Telugu Hits 🔥',
+    desc: 'Tollywood blockbusters, sensational dance beats, and chart-topping Telugu anthems.',
+    img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=600&h=600',
+  },
+  'tamil songs': {
+    title: 'Tamil Hits ⚡',
+    desc: 'Kollywood superhits, Anirudh party bangers, and AR Rahman musical genius.',
+    img: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=600&h=600',
+  },
+  'english songs': {
+    title: 'English & Global Pop 🌍',
+    desc: 'Billboard Hot 100, viral international pop hits and global tracks.',
+    img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=600&h=600',
+  },
 };
 
 const PlaylistView = () => {
