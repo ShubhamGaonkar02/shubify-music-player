@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Play,
   Pause,
@@ -146,8 +147,9 @@ const MusicPlayer = () => {
       )}
 
       {/* FULL-SCREEN / EXPANDED NOW PLAYING VIEW */}
-      {isExpanded && (
-        <div className="fixed inset-0 z-[100] bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-4 sm:p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
+      {isExpanded &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] h-[100dvh] w-screen bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-4 sm:p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
           {/* Header Drag Down Control */}
           <div className="flex items-center justify-between w-full max-w-4xl mx-auto">
             <button
@@ -298,7 +300,8 @@ const MusicPlayer = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MINI PLAYER BAR */}
