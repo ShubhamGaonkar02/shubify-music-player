@@ -111,7 +111,7 @@ const Home = () => {
 
   const languageCategories = [
     {
-      name: 'Hindi Hits 🇮🇳',
+      name: 'Hindi Hits ❤️',
       desc: 'Top Bollywood chartbusters & trending Hindi melodies',
       query: 'Hindi Songs',
       imgKey: 'Hindi',
