@@ -1,12 +1,12 @@
 import React from 'react';
-import { Home, Search, Library, Plus, Heart, Music, ArrowRight } from 'lucide-react';
+import { Home, Search, Library, Plus, Heart, Music, ArrowRight, Radio } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { customPlaylists, likedSongs, theme, openCreatePlaylistModal } = usePlayerStore();
+  const { customPlaylists, likedSongs, theme, openCreatePlaylistModal, openIdentifierModal } = usePlayerStore();
 
   const navLinks = [
     { name: 'Home', path: '/', icon: Home },
@@ -79,6 +79,21 @@ const Sidebar = () => {
               </Link>
             );
           })}
+
+          {/* Shazam Identify Action */}
+          <button
+            onClick={openIdentifierModal}
+            className={`flex items-center gap-4 text-sm font-bold transition-colors duration-200 text-left ${subTextColor} hover:text-slate-900 group`}
+            title="Identify Song (Shazam Radar)"
+          >
+            <Radio size={22} className="text-[#1ed760] group-hover:scale-110 transition-transform animate-pulse" />
+            <div className="flex items-center gap-2">
+              <span>Identify Song</span>
+              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                Radar
+              </span>
+            </div>
+          </button>
         </div>
       </div>
 

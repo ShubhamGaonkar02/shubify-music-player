@@ -3,11 +3,11 @@ import { searchSpotify } from '../api/spotify';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { Play, Heart, Globe, Linkedin, Github, Mail } from 'lucide-react';
+import { Play, Heart, Globe, Linkedin, Github, Mail, Radio } from 'lucide-react';
 import axios from 'axios';
 
 const Home = () => {
-  const { playTrackList, theme } = usePlayerStore();
+  const { playTrackList, theme, openIdentifierModal } = usePlayerStore();
   const { user } = useAuthStore();
   const navigate = useNavigate();
 
@@ -369,6 +369,57 @@ const Home = () => {
                 <p className={`text-[11px] sm:text-xs line-clamp-2 ${subTextColor}`}>{item.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* SECTION 5: SHAZAM / SONG IDENTIFIER DOWN ON MAIN SCREEN */}
+        <div className="mb-10 sm:mb-12">
+          <div
+            onClick={openIdentifierModal}
+            className={`p-5 sm:p-7 rounded-2xl cursor-pointer transition-all duration-300 hover:scale-[1.01] shadow-lg flex flex-col md:flex-row items-center justify-between gap-5 border ${
+              theme === 'light'
+                ? 'bg-gradient-to-r from-emerald-100/90 via-teal-50 to-emerald-100/90 border-emerald-300 hover:border-emerald-400'
+                : 'bg-gradient-to-r from-emerald-950/40 via-[#181818] to-emerald-950/40 border-white/10 hover:border-emerald-500/50'
+            }`}
+          >
+            <div className="flex items-center gap-4 sm:gap-6 text-center md:text-left flex-col md:flex-row">
+              <div className="relative">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#1ed760] text-black flex items-center justify-center shadow-xl animate-pulse">
+                  <Radio size={30} className="text-black" />
+                </div>
+                <div className="absolute inset-0 rounded-full border-4 border-[#1ed760]/40 animate-ping" />
+              </div>
+              <div>
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-1">
+                  <span className="text-[10px] sm:text-xs uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-[#1ed760]/20 text-[#1ed760] border border-[#1ed760]/30">
+                    Shubify Radar
+                  </span>
+                </div>
+                <h3 className={`text-lg sm:text-2xl font-black ${textColor}`}>
+                  Heard a song nearby? Identify it instantly
+                </h3>
+                <p className={`text-xs sm:text-sm mt-0.5 max-w-xl ${subTextColor}`}>
+                  Turn on your microphone to identify songs playing on TV, reels, or radio—or hum the melody to find and play it immediately.
+                </p>
+              </div>
+            </div>
+
+            {/* Identify Button matching user's image */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openIdentifierModal();
+              }}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-xs sm:text-sm font-black transition-all shadow-md hover:scale-105 flex-shrink-0 ${
+                theme === 'light'
+                  ? 'bg-emerald-100 text-emerald-950 border border-emerald-300 hover:bg-emerald-200'
+                  : 'bg-[#1ed760] hover:bg-[#1fdf64] text-black'
+              }`}
+              title="Identify Song (Shazam / Radar)"
+            >
+              <Radio size={18} className="text-[#1ed760] animate-pulse" />
+              <span>Identify</span>
+            </button>
           </div>
         </div>
       </div>
