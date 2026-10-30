@@ -286,50 +286,7 @@ const Home = () => {
           </div>
         </div>
 
-        {/* SECTION 3: SEPARATE SONG CATEGORIES & MOODS */}
-        <div className="mb-10 sm:mb-12">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className={`text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2 ${textColor}`}>
-              <span>💖</span> Song Categories & Genres
-            </h2>
-            <button
-              onClick={() => navigate('/search')}
-              className={`text-xs font-bold uppercase tracking-wider transition-colors ${
-                theme === 'light' ? 'text-emerald-800 hover:text-slate-900' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Show all
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-            {songCategories.map((item, i) => (
-              <div
-                key={i}
-                onClick={() => handleOpenPlaylist(item.query)}
-                className={`${cardBg} p-3 sm:p-4 rounded-xl cursor-pointer group`}
-              >
-                <div className="relative mb-3 sm:mb-4 pb-[100%] rounded-lg overflow-hidden shadow-lg bg-gray-200">
-                  <img
-                    src={moviePosters[item.imgKey]}
-                    alt={item.name}
-                    className="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <button
-                    onClick={(e) => handleQuickPlay(e, item.query)}
-                    className="absolute bottom-2 right-2 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 shadow-xl hover:scale-110 z-10"
-                    title="Play Category"
-                  >
-                    <Play size={20} fill="black" className="text-black ml-0.5" />
-                  </button>
-                </div>
-                <h3 className={`font-bold mb-1 truncate text-xs sm:text-sm ${textColor}`}>{item.name}</h3>
-                <p className={`text-[11px] sm:text-xs line-clamp-2 ${subTextColor}`}>{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* SECTION 4: SEPARATE LANGUAGES & REGIONAL HITS */}
+        {/* SECTION 3: SEPARATE LANGUAGES & REGIONAL HITS */}
         <div className="mb-10 sm:mb-12">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <h2 className={`text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2 ${textColor}`}>
@@ -361,6 +318,49 @@ const Home = () => {
                     onClick={(e) => handleQuickPlay(e, item.query)}
                     className="absolute bottom-2 right-2 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 shadow-xl hover:scale-110 z-10"
                     title={`Play ${item.name}`}
+                  >
+                    <Play size={20} fill="black" className="text-black ml-0.5" />
+                  </button>
+                </div>
+                <h3 className={`font-bold mb-1 truncate text-xs sm:text-sm ${textColor}`}>{item.name}</h3>
+                <p className={`text-[11px] sm:text-xs line-clamp-2 ${subTextColor}`}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION 4: SEPARATE SONG CATEGORIES & MOODS */}
+        <div className="mb-10 sm:mb-12">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className={`text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2 ${textColor}`}>
+              <span>💖</span> Song Categories & Genres
+            </h2>
+            <button
+              onClick={() => navigate('/search')}
+              className={`text-xs font-bold uppercase tracking-wider transition-colors ${
+                theme === 'light' ? 'text-emerald-800 hover:text-slate-900' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Show all
+            </button>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+            {songCategories.map((item, i) => (
+              <div
+                key={i}
+                onClick={() => handleOpenPlaylist(item.query)}
+                className={`${cardBg} p-3 sm:p-4 rounded-xl cursor-pointer group`}
+              >
+                <div className="relative mb-3 sm:mb-4 pb-[100%] rounded-lg overflow-hidden shadow-lg bg-gray-200">
+                  <img
+                    src={moviePosters[item.imgKey]}
+                    alt={item.name}
+                    className="absolute top-0 left-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <button
+                    onClick={(e) => handleQuickPlay(e, item.query)}
+                    className="absolute bottom-2 right-2 w-10 h-10 sm:w-12 sm:h-12 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 shadow-xl hover:scale-110 z-10"
+                    title="Play Category"
                   >
                     <Play size={20} fill="black" className="text-black ml-0.5" />
                   </button>
