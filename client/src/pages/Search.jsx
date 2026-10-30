@@ -293,10 +293,7 @@ const Search = () => {
               {activeTab === 'All' && topResult && (
                 <div className="lg:col-span-2">
                   <h2 className={`text-2xl mb-4 ${headingColor}`}>Top result</h2>
-                  <div
-                    onClick={() => handlePlayTrack(topResult, songsList)}
-                    className={`${cardBg} transition-all p-6 rounded-xl relative group cursor-pointer shadow-md`}
-                  >
+                  <div className={`${cardBg} transition-all p-6 rounded-xl relative group cursor-pointer shadow-md`}>
                     <img
                       src={
                         topResult.album?.images?.[0]?.url ||
@@ -348,7 +345,6 @@ const Search = () => {
                         return (
                           <div
                             key={track.id}
-                            onClick={() => handlePlayTrack(track, songsList)}
                             className={`flex items-center justify-between p-3 rounded-lg ${rowHover} group cursor-pointer transition-colors ${
                               isCurrent ? (theme === 'light' ? 'bg-emerald-100/90 border border-emerald-300' : 'bg-white/10') : ''
                             }`}
