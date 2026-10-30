@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Sun, Moon, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sun, Moon, Plus, Radio } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import { usePlayerStore } from '../store/playerStore';
@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/authStore';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme, openCreatePlaylistModal } = usePlayerStore();
+  const { theme, toggleTheme, openCreatePlaylistModal, openIdentifierModal } = usePlayerStore();
   const { user } = useAuthStore();
   const { isSignedIn } = useUser();
 
@@ -69,6 +69,20 @@ const Navbar = () => {
             <span>Create</span>
           </button>
         )}
+
+        {/* Song Identifier (Shazam) Radar Button */}
+        <button
+          onClick={openIdentifierModal}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all shadow-sm group ${
+            theme === 'light'
+              ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
+              : 'bg-white/10 hover:bg-white/20 border border-white/10 text-white'
+          }`}
+          title="Identify Song (Shazam / Radar)"
+        >
+          <Radio size={16} className="text-[#1ed760] group-hover:scale-110 transition-transform animate-pulse" />
+          <span className="hidden sm:inline">Identify</span>
+        </button>
 
         {/* Light / Dark Mode Toggle Button */}
         <button

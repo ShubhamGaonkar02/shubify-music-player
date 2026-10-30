@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import MusicPlayer from './components/MusicPlayer';
 import MobileBottomNav from './components/MobileBottomNav';
 import CreatePlaylistModal from './components/CreatePlaylistModal';
+import SongIdentifierModal from './components/SongIdentifierModal';
 import Home from './pages/Home';
 import Search from './pages/Search';
 import Login from './pages/Login';
@@ -19,7 +20,13 @@ import { useAuthStore } from './store/authStore';
 
 // Main music player layout when user is authenticated
 function MainAppLayout() {
-  const { theme, isCreatePlaylistOpen, closeCreatePlaylistModal } = usePlayerStore();
+  const {
+    theme,
+    isCreatePlaylistOpen,
+    closeCreatePlaylistModal,
+    isIdentifierOpen,
+    closeIdentifierModal,
+  } = usePlayerStore();
 
   return (
     <div
@@ -69,6 +76,12 @@ function MainAppLayout() {
       <CreatePlaylistModal
         isOpen={isCreatePlaylistOpen}
         onClose={closeCreatePlaylistModal}
+      />
+
+      {/* Global Song Identifier (Shazam) Modal */}
+      <SongIdentifierModal
+        isOpen={isIdentifierOpen}
+        onClose={closeIdentifierModal}
       />
     </div>
   );

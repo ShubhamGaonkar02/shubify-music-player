@@ -63,6 +63,11 @@ export const usePlayerStore = create((set, get) => ({
   openCreatePlaylistModal: () => set({ isCreatePlaylistOpen: true }),
   closeCreatePlaylistModal: () => set({ isCreatePlaylistOpen: false }),
 
+  // Song Identifier (Shazam) Modal State
+  isIdentifierOpen: false,
+  openIdentifierModal: () => set({ isIdentifierOpen: true }),
+  closeIdentifierModal: () => set({ isIdentifierOpen: false }),
+
   // Theme State (dark vs light)
   theme: localStorage.getItem('shubify_theme') || 'dark',
   toggleTheme: () => {

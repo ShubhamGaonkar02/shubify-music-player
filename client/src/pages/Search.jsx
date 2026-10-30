@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search as SearchIcon, X, Play, Pause, Heart } from 'lucide-react';
+import { Search as SearchIcon, X, Play, Pause, Heart, Radio } from 'lucide-react';
 import { searchSpotify } from '../api/spotify';
 import { usePlayerStore } from '../store/playerStore';
 
@@ -17,6 +17,7 @@ const Search = () => {
     toggleLikeTrack,
     isLiked,
     theme,
+    openIdentifierModal,
   } = usePlayerStore();
 
   const presets = [
@@ -161,31 +162,73 @@ const Search = () => {
     <div className="p-8 pb-32 min-h-full">
       {/* Search Header */}
       <div className="flex flex-col gap-4 mb-6">
-        <div className="relative max-w-lg">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-700">
-            <SearchIcon size={20} />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 max-w-lg">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-700">
+              <SearchIcon size={20} />
+            </div>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className={`block w-full pl-11 pr-10 py-3 rounded-full text-sm font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-spotify-base transition-all ${
+                theme === 'light'
+                  ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 placeholder-emerald-700'
+                  : 'bg-white text-black placeholder-gray-500'
+              }`}
+              placeholder="Search Dhurandhar, Chennai Express, MS Dhoni, Romance, Party..."
+              autoFocus
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-700 hover:text-emerald-950"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className={`block w-full pl-11 pr-10 py-3 rounded-full text-sm font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-spotify-base transition-all ${
-              theme === 'light'
-                ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 placeholder-emerald-700'
-                : 'bg-white text-black placeholder-gray-500'
-            }`}
-            placeholder="Search Dhurandhar, Chennai Express, MS Dhoni, Romance, Party..."
-            autoFocus
-          />
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-700 hover:text-emerald-950"
-            >
-              <X size={18} />
-            </button>
-          )}
+
+          {/* Identify Song (Shazam) button next to search bar */}
+          <button
+            onClick={openIdentifierModal}
+            className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-sm shadow-md hover:scale-105 transition-all group"
+            title="Identify Song (Shazam / Radar)"
+          >
+            <Radio size={18} className="animate-pulse group-hover:scale-110 transition-transform" />
+            <span>Identify Song</span>
+          </button>
         </div>
+
+        {/* Shazam Song Identifier Banner */}
+        {!query && (
+          <div
+            onClick={openIdentifierModal}
+            className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all hover:scale-[1.01] shadow-sm ${
+              theme === 'light'
+                ? 'bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-emerald-300 hover:border-emerald-400'
+                : 'bg-gradient-to-r from-emerald-900/30 via-teal-900/20 to-black/40 border-white/10 hover:border-emerald-500/50'
+            }`}
+          >
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-full bg-[#1ed760] text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                <Radio size={22} className="animate-pulse" />
+              </div>
+              <div>
+                <h4 className={`text-sm font-black ${theme === 'light' ? 'text-emerald-950' : 'text-white'}`}>
+                  Heard a song nearby? Identify with Shubify Shazam
+                </h4>
+                <p className={`text-xs ${theme === 'light' ? 'text-emerald-700 font-medium' : 'text-gray-400'}`}>
+                  Tap here to listen to music playing around you or hum a tune
+                </p>
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs shadow-md transition-all">
+              <Radio size={14} />
+              <span>Tap to Identify</span>
+            </div>
+          </div>
+        )}
 
         {/* Quick Presets */}
         {!query && (
