@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Play,
   Pause,
@@ -45,22 +46,44 @@ const MusicPlayer = () => {
         return;
       }
 
-      setIsLoading(true);
       setPlayed(0);
 
-      const fallbackUrl = currentTrack.preview_url || null;
+      // Fast-path 1: If track already has preview_url, set it immediately!
+      // This preserves user touch activation so mobile browsers autoplay instantly on the 1st tap.
+      if (currentTrack.preview_url) {
+        setActiveMediaUrl(currentTrack.preview_url);
+        setIsLoading(false);
+        setIsPlaying(true);
+        return;
+      }
+
+      setIsLoading(true);
 
       try {
-        const query = `${currentTrack.name} ${currentTrack.artists?.[0]?.name || ''}`;
-        const videoId = await searchYouTubeVideo(query);
+        const query = `${currentTrack.name} ${currentTrack.artists?.[0]?.name || ''}`.trim();
+
+        // Fast-path 2: Quick iTunes public search (no key required, fast CDN audio preview)
+        const itunesRes = await fetch(
+          `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=IN&entity=song&limit=1`
+        );
+        const itunesData = await itunesRes.json();
+        const itunesPreview = itunesData?.results?.[0]?.previewUrl;
 
         if (isMounted) {
-          if (videoId) {
-            setActiveMediaUrl(`https://www.youtube.com/watch?v=${videoId}`);
-          } else if (fallbackUrl) {
-            setActiveMediaUrl(fallbackUrl);
+          if (itunesPreview) {
+            setActiveMediaUrl(itunesPreview);
           } else {
-            setActiveMediaUrl('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+            // Optional YouTube fallback if user has provided VITE_YOUTUBE_API_KEY
+            const ytKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+            let videoId = null;
+            if (ytKey) {
+              videoId = await searchYouTubeVideo(query);
+            }
+            if (videoId) {
+              setActiveMediaUrl(`https://www.youtube.com/watch?v=${videoId}`);
+            } else {
+              setActiveMediaUrl('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+            }
           }
           setIsLoading(false);
           setIsPlaying(true);
@@ -68,7 +91,7 @@ const MusicPlayer = () => {
       } catch (err) {
         console.error('Playback setup error:', err);
         if (isMounted) {
-          setActiveMediaUrl(fallbackUrl || 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+          setActiveMediaUrl('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
           setIsLoading(false);
           setIsPlaying(true);
         }
@@ -125,181 +148,195 @@ const MusicPlayer = () => {
 
   return (
     <>
-      {/* Hidden Audio Player */}
+      {/* Off-screen Audio Player (Must NOT be display:none so mobile browsers allow autoplay) */}
       {activeMediaUrl && (
-        <div className="hidden">
+        <div
+          className="absolute -top-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none"
+          aria-hidden="true"
+        >
           <ReactPlayer
             ref={playerRef}
             url={activeMediaUrl}
             playing={isPlaying}
             volume={volume}
+            playsinline
             onProgress={(progress) => setPlayed(progress.played)}
             onDuration={(dur) => setDuration(dur)}
             onEnded={() => playNext()}
             config={{
+              file: {
+                forceAudio: true,
+                attributes: {
+                  playsInline: true,
+                  autoPlay: true,
+                  preload: 'auto',
+                },
+              },
               youtube: {
-                playerVars: { showinfo: 0, controls: 0, disablekb: 1 },
+                playerVars: { showinfo: 0, controls: 0, disablekb: 1, autoplay: 1 },
               },
             }}
           />
         </div>
       )}
 
-      {/* FULL-SCREEN / EXPANDED NOW PLAYING VIEW */}
-      {isExpanded && (
-        <div className="fixed inset-0 z-[100] bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-4 sm:p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
-          {/* Header Drag Down Control */}
-          <div className="flex items-center justify-between w-full max-w-4xl mx-auto">
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110 flex items-center gap-1 font-bold text-xs"
-              title="Collapse Player"
-            >
-              <ChevronDown size={20} />
-              <span className="hidden sm:inline">Minimize</span>
-            </button>
-            <div className="text-center px-2">
-              <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-spotify-base">
-                Now Playing from Shubify
-              </span>
-              <p className="text-xs sm:text-sm font-bold text-gray-300 truncate max-w-[140px] sm:max-w-xs md:max-w-md">
-                {currentTrack.album?.name || 'Bollywood Hits'}
-              </p>
-            </div>
-            <button
-              onClick={() => toggleLikeTrack(currentTrack)}
-              className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110"
-            >
-              <Heart
-                size={20}
-                fill={isLiked(currentTrack?.id) ? '#1db954' : 'none'}
-                className={isLiked(currentTrack?.id) ? 'text-spotify-base animate-pulse' : 'text-white'}
-              />
-            </button>
-          </div>
-
-          {/* Large Spinning Vinyl Art Center */}
-          <div className="flex flex-col items-center justify-center my-3 sm:my-6 max-w-4xl mx-auto w-full">
-            <div className="relative mb-4 sm:mb-8">
-              <div
-                className={`w-44 h-44 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full shadow-2xl overflow-hidden relative ring-4 sm:ring-8 ring-spotify-base/30 transition-transform ${
-                  isPlaying ? 'animate-spin-slow ring-spotify-base/60' : 'ring-white/10'
-                }`}
+      {/* FULL-SCREEN / EXPANDED NOW PLAYING VIEW (Rendered into document.body via Portal) */}
+      {isExpanded &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] h-[100dvh] w-screen bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-4 sm:p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
+            {/* Header Drag Down Control */}
+            <div className="flex items-center justify-between w-full max-w-4xl mx-auto pt-2 sm:pt-0">
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110 flex items-center gap-1 font-bold text-xs"
+                title="Collapse Player"
               >
-                <img src={albumArt} alt={currentTrack.name} className="w-full h-full object-cover rounded-full" />
-                {/* Vinyl Center Spindle */}
-                <div className="absolute inset-0 m-auto w-8 h-8 sm:w-12 sm:h-12 bg-black rounded-full border-2 sm:border-4 border-white/40 shadow-2xl flex items-center justify-center pointer-events-none">
-                  <div className="w-2.5 h-2.5 sm:w-4 sm:h-4 bg-spotify-base rounded-full" />
+                <ChevronDown size={22} />
+                <span className="hidden sm:inline">Minimize</span>
+              </button>
+              <div className="text-center px-2 flex-1 min-w-0">
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-spotify-base">
+                  Now Playing from Shubify
+                </span>
+                <p className="text-xs sm:text-sm font-bold text-gray-300 truncate max-w-[200px] sm:max-w-xs md:max-w-md mx-auto">
+                  {currentTrack.album?.name || 'Bollywood Hits'}
+                </p>
+              </div>
+              <button
+                onClick={() => toggleLikeTrack(currentTrack)}
+                className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110"
+              >
+                <Heart
+                  size={20}
+                  fill={isLiked(currentTrack?.id) ? '#1db954' : 'none'}
+                  className={isLiked(currentTrack?.id) ? 'text-spotify-base animate-pulse' : 'text-white'}
+                />
+              </button>
+            </div>
+
+            {/* Large Spinning Vinyl Art Center */}
+            <div className="flex flex-col items-center justify-center my-auto py-4 max-w-4xl mx-auto w-full">
+              <div className="relative mb-4 sm:mb-8">
+                <div
+                  className={`w-52 h-52 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full shadow-2xl overflow-hidden relative ring-4 sm:ring-8 ring-spotify-base/30 transition-transform ${
+                    isPlaying ? 'animate-spin-slow ring-spotify-base/60' : 'ring-white/10'
+                  }`}
+                >
+                  <img src={albumArt} alt={currentTrack.name} className="w-full h-full object-cover rounded-full" />
+                  {/* Vinyl Center Spindle */}
+                  <div className="absolute inset-0 m-auto w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-full border-2 sm:border-4 border-white/40 shadow-2xl flex items-center justify-center pointer-events-none">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 bg-spotify-base rounded-full" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Song Title & Equalizer */}
-            <div className="text-center max-w-lg px-2">
-              <div className="flex items-center justify-center gap-2">
-                <h1 className="text-lg sm:text-3xl font-black tracking-tight text-white line-clamp-1">
-                  {currentTrack.name}
-                </h1>
-                {isPlaying && (
-                  <div className="flex items-end gap-1 h-5 sm:h-6 flex-shrink-0">
-                    <span className="w-1 bg-spotify-base rounded-full equalizer-bar-1" />
-                    <span className="w-1 bg-spotify-base rounded-full equalizer-bar-2" />
-                    <span className="w-1 bg-spotify-base rounded-full equalizer-bar-3" />
-                    <span className="w-1 bg-spotify-base rounded-full equalizer-bar-4" />
-                  </div>
-                )}
+              {/* Song Title & Equalizer */}
+              <div className="text-center max-w-lg px-4 w-full">
+                <div className="flex items-center justify-center gap-2">
+                  <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white line-clamp-1">
+                    {currentTrack.name}
+                  </h1>
+                  {isPlaying && (
+                    <div className="flex items-end gap-1 h-5 sm:h-6 flex-shrink-0">
+                      <span className="w-1 bg-spotify-base rounded-full equalizer-bar-1" />
+                      <span className="w-1 bg-spotify-base rounded-full equalizer-bar-2" />
+                      <span className="w-1 bg-spotify-base rounded-full equalizer-bar-3" />
+                      <span className="w-1 bg-spotify-base rounded-full equalizer-bar-4" />
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm sm:text-lg text-spotify-base font-extrabold mt-1 truncate">
+                  {currentTrack.artists?.map((a) => a.name).join(', ')}
+                </p>
               </div>
-              <p className="text-sm sm:text-lg text-spotify-base font-extrabold mt-1 truncate">
-                {currentTrack.artists?.map((a) => a.name).join(', ')}
-              </p>
             </div>
-          </div>
 
-          {/* Timeline & Controls */}
-          <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 sm:gap-6">
-            {/* Timeline Bar */}
-            <div className="flex flex-col gap-1.5">
-              <div className="relative w-full h-2 group flex items-center cursor-pointer">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.001"
-                  value={played}
-                  onChange={handleSeekChange}
-                  className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-                />
-                <div className="w-full h-2 rounded-full overflow-hidden bg-white/20">
+            {/* Timeline & Controls */}
+            <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 sm:gap-6 pb-6 sm:pb-4">
+              {/* Timeline Bar */}
+              <div className="flex flex-col gap-1.5 px-2">
+                <div className="relative w-full h-2.5 group flex items-center cursor-pointer">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.001"
+                    value={played}
+                    onChange={handleSeekChange}
+                    className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="w-full h-2 rounded-full overflow-hidden bg-white/20">
+                    <div
+                      className="h-full bg-spotify-base transition-all duration-75"
+                      style={{ width: `${played * 100}%` }}
+                    />
+                  </div>
                   <div
-                    className="h-full bg-spotify-base transition-all duration-75"
-                    style={{ width: `${played * 100}%` }}
+                    className="absolute h-4 w-4 bg-white rounded-full opacity-100 shadow-xl pointer-events-none"
+                    style={{ left: `calc(${played * 100}% - 8px)` }}
                   />
                 </div>
-                <div
-                  className="absolute h-4 w-4 bg-white rounded-full opacity-100 shadow-xl pointer-events-none"
-                  style={{ left: `calc(${played * 100}% - 8px)` }}
-                />
+                <div className="flex justify-between text-xs font-black text-gray-400 px-0.5">
+                  <span>{formatTime(duration * played)}</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
               </div>
-              <div className="flex justify-between text-xs font-black text-gray-400">
-                <span>{formatTime(duration * played)}</span>
-                <span>{formatTime(duration)}</span>
+
+              {/* Playback Controls (Previous, Play/Pause, Next) */}
+              <div className="flex items-center justify-center gap-8 sm:gap-10 px-4">
+                <button
+                  onClick={playPrevious}
+                  className="text-white hover:text-spotify-base transition-all hover:scale-125 p-2"
+                  title="Previous"
+                >
+                  <SkipBack size={30} fill="currentColor" />
+                </button>
+
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="w-16 h-16 sm:w-18 sm:h-18 bg-spotify-base hover:bg-spotify-highlight text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all"
+                  title={isPlaying ? 'Pause' : 'Play'}
+                >
+                  {isLoading ? (
+                    <Loader2 size={30} className="animate-spin text-black" />
+                  ) : isPlaying ? (
+                    <Pause size={30} fill="black" className="text-black" />
+                  ) : (
+                    <Play size={30} fill="black" className="text-black ml-1" />
+                  )}
+                </button>
+
+                <button
+                  onClick={playNext}
+                  className="text-white hover:text-spotify-base transition-all hover:scale-125 p-2"
+                  title="Next"
+                >
+                  <SkipForward size={30} fill="currentColor" />
+                </button>
               </div>
-            </div>
 
-            {/* Playback Controls (Previous, Play/Pause, Next) */}
-            <div className="flex items-center justify-center gap-8 sm:gap-10 px-4">
-              <button
-                onClick={playPrevious}
-                className="text-white hover:text-spotify-base transition-all hover:scale-125"
-                title="Previous"
-              >
-                <SkipBack size={28} fill="currentColor" />
-              </button>
-
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="w-14 h-14 sm:w-16 sm:h-16 bg-spotify-base hover:bg-spotify-highlight text-black rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-all"
-                title={isPlaying ? 'Pause' : 'Play'}
-              >
-                {isLoading ? (
-                  <Loader2 size={26} className="animate-spin text-black" />
-                ) : isPlaying ? (
-                  <Pause size={26} fill="black" className="text-black" />
-                ) : (
-                  <Play size={26} fill="black" className="text-black ml-1" />
-                )}
-              </button>
-
-              <button
-                onClick={playNext}
-                className="text-white hover:text-spotify-base transition-all hover:scale-125"
-                title="Next"
-              >
-                <SkipForward size={28} fill="currentColor" />
-              </button>
-            </div>
-
-            {/* Volume Control */}
-            <div className="flex items-center justify-center gap-3 max-w-xs mx-auto w-full pt-1">
-              <Volume2 size={18} className="text-gray-400" />
-              <div className="relative w-full h-1.5 flex items-center cursor-pointer">
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={handleVolumeChange}
-                  className="absolute w-full h-full opacity-0 cursor-pointer z-10"
-                />
-                <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/20">
-                  <div className="h-full bg-spotify-base" style={{ width: `${volume * 100}%` }} />
+              {/* Volume Control */}
+              <div className="flex items-center justify-center gap-3 max-w-xs mx-auto w-full pt-1 px-4">
+                <Volume2 size={18} className="text-gray-400 flex-shrink-0" />
+                <div className="relative w-full h-1.5 flex items-center cursor-pointer">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+                  <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/20">
+                    <div className="h-full bg-spotify-base" style={{ width: `${volume * 100}%` }} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
 
       {/* MINI PLAYER BAR */}
       <div className={`h-full flex items-center justify-between px-3 md:px-4 relative select-none ${playerBg}`}>
@@ -404,6 +441,14 @@ const MusicPlayer = () => {
 
             <button onClick={playNext} className={`${controlBtnColor} transition-all hover:scale-110`} title="Next">
               <SkipForward size={18} fill="currentColor" />
+            </button>
+
+            <button
+              onClick={() => setIsExpanded(true)}
+              className={`${controlBtnColor} transition-all hover:scale-110 md:hidden p-1 ml-0.5`}
+              title="Open Full Screen Player"
+            >
+              <ChevronUp size={20} />
             </button>
           </div>
 

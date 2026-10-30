@@ -3,6 +3,9 @@ import axios from 'axios';
 const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 export const searchYouTubeVideo = async (searchQuery) => {
+  if (!YOUTUBE_API_KEY) {
+    return null;
+  }
   try {
     const response = await axios.get('https://www.googleapis.com/youtube/v3/search', {
       params: {
