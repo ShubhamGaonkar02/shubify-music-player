@@ -70,10 +70,10 @@ const Navbar = () => {
           </button>
         )}
 
-        {/* Song Identifier (Shazam) Radar Button */}
+        {/* Song Identifier (Shazam) Radar Button - Desktop Navbar (Mobile has it in bottom nav) */}
         <button
           onClick={openIdentifierModal}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all shadow-sm group ${
+          className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all shadow-sm group ${
             theme === 'light'
               ? 'bg-emerald-100 hover:bg-emerald-200 text-emerald-950 border border-emerald-300'
               : 'bg-white/10 hover:bg-white/20 border border-white/10 text-white'
@@ -81,7 +81,7 @@ const Navbar = () => {
           title="Identify Song (Shazam / Radar)"
         >
           <Radio size={16} className="text-[#1ed760] group-hover:scale-110 transition-transform animate-pulse" />
-          <span className="hidden sm:inline">Identify</span>
+          <span>Identify</span>
         </button>
 
         {/* Light / Dark Mode Toggle Button */}

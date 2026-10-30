@@ -52,16 +52,16 @@ const LikedSongs = () => {
   return (
     <div className="flex-1 overflow-y-auto pb-32 min-h-full">
       {/* Hero Banner */}
-      <div className={`${headerBg} p-8 flex flex-col md:flex-row items-end gap-6 shadow-xl transition-all`}>
-        <div className="w-52 h-52 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-2xl flex items-center justify-center flex-shrink-0 ring-4 ring-black/20">
-          <Heart size={80} className="text-white fill-current" />
+      <div className={`${headerBg} p-4 sm:p-8 flex flex-col md:flex-row items-center md:items-end text-center md:text-left gap-4 sm:gap-6 shadow-xl transition-all`}>
+        <div className="w-32 h-32 sm:w-52 sm:h-52 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl shadow-2xl flex items-center justify-center flex-shrink-0 ring-4 ring-black/20">
+          <Heart size={52} className="text-white fill-current sm:w-20 sm:h-20" />
         </div>
-        <div className="flex flex-col gap-2 text-white">
-          <span className="text-xs font-bold uppercase tracking-wider bg-black/40 px-3 py-1 rounded-full w-max backdrop-blur-md border border-white/10">
+        <div className="flex flex-col gap-1.5 sm:gap-2 text-white items-center md:items-start">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider bg-black/40 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full w-max backdrop-blur-md border border-white/10">
             Playlist
           </span>
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight drop-shadow-md">Liked Songs</h1>
-          <p className="text-sm text-gray-200 mt-2 flex items-center gap-2 font-bold">
+          <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold tracking-tight drop-shadow-md">Liked Songs</h1>
+          <p className="text-xs sm:text-sm text-gray-200 mt-1 flex items-center gap-2 font-bold">
             <span>Your Personal Collection</span>
             <span>•</span>
             <span>{likedSongs.length} songs</span>
@@ -76,49 +76,49 @@ const LikedSongs = () => {
       </div>
 
       {/* Action Controls Bar */}
-      <div className="p-8 pb-4 flex items-center gap-6">
+      <div className="p-4 sm:p-8 pb-3 sm:pb-4 flex items-center gap-6">
         {likedSongs.length > 0 && (
           <button
             onClick={handlePlayAll}
-            className="w-14 h-14 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-all"
+            className="w-12 h-12 sm:w-14 sm:h-14 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-all"
           >
             {isPlaying && likedSongs.some((t) => t.id === currentTrack?.id) ? (
-              <Pause size={26} fill="black" className="text-black" />
+              <Pause size={22} fill="black" className="text-black" />
             ) : (
-              <Play size={26} fill="black" className="text-black ml-1" />
+              <Play size={22} fill="black" className="text-black ml-1" />
             )}
           </button>
         )}
       </div>
 
       {/* Track List Table */}
-      <div className="px-8">
+      <div className="px-2 sm:px-8">
         {likedSongs.length > 0 ? (
           <div className="w-full">
             {/* Table Header */}
-            <div className={`grid grid-cols-12 text-xs border-b pb-3 mb-4 px-4 uppercase tracking-wider ${tableHeaderColor}`}>
-              <span className="col-span-1">#</span>
-              <span className="col-span-6 md:col-span-5">Title</span>
+            <div className={`grid grid-cols-12 text-xs border-b pb-2.5 mb-3 px-2 sm:px-4 uppercase tracking-wider ${tableHeaderColor}`}>
+              <span className="hidden sm:block col-span-1">#</span>
+              <span className="col-span-9 sm:col-span-6 md:col-span-5">Title</span>
               <span className="hidden md:block md:col-span-4">Album</span>
-              <span className="col-span-5 md:col-span-2 text-right flex items-center justify-end pr-2">
-                <Clock size={16} />
+              <span className="col-span-3 sm:col-span-5 md:col-span-2 text-right flex items-center justify-end pr-2">
+                <Clock size={15} />
               </span>
             </div>
 
             {/* Song Rows */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               {likedSongs.map((track, index) => {
                 const isCurrent = currentTrack?.id === track.id;
                 return (
                   <div
                     key={track.id}
-                    className={`grid grid-cols-12 items-center p-3 rounded-lg ${rowHover} group transition-all cursor-pointer ${
+                    className={`grid grid-cols-12 items-center p-2 sm:p-3 rounded-xl ${rowHover} group transition-all cursor-pointer ${
                       isCurrent ? activeRow : ''
                     }`}
                   >
                     {/* Index / Play Button */}
                     <div
-                      className={`col-span-1 text-sm flex items-center ${indexColor}`}
+                      className={`hidden sm:flex col-span-1 text-sm items-center ${indexColor}`}
                       onClick={() => handlePlayTrack(track, index)}
                     >
                       <span className="group-hover:hidden">{index + 1}</span>
@@ -133,7 +133,7 @@ const LikedSongs = () => {
 
                     {/* Title & Artist */}
                     <div
-                      className="col-span-6 md:col-span-5 flex items-center gap-3.5 min-w-0"
+                      className="col-span-9 sm:col-span-6 md:col-span-5 flex items-center gap-2.5 sm:gap-3.5 min-w-0"
                       onClick={() => handlePlayTrack(track, index)}
                     >
                       <img

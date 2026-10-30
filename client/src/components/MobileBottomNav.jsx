@@ -11,18 +11,18 @@ const MobileBottomNav = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Search', path: '/search', icon: Search },
     { name: 'Identify', isAction: true, action: openIdentifierModal, icon: Radio },
-    { name: 'Your Library', path: '/library', icon: Library },
+    { name: 'Library', path: '/library', icon: Library },
     { name: 'Liked', path: '/liked', icon: Heart },
   ];
 
   const bgStyle =
     theme === 'light'
-      ? 'bg-white/95 text-slate-900 border-t border-slate-200 shadow-lg'
-      : 'bg-[#121212]/95 text-white border-t border-[#282828]';
+      ? 'bg-white/95 text-slate-900 border-t border-slate-200 shadow-xl'
+      : 'bg-[#121212]/95 text-white border-t border-white/10';
 
   return (
     <div
-      className={`md:hidden fixed bottom-0 left-0 right-0 h-16 z-50 backdrop-blur-lg flex items-center justify-around px-2 transition-colors ${bgStyle}`}
+      className={`md:hidden fixed bottom-0 left-0 right-0 h-16 pb-[env(safe-area-inset-bottom,0px)] z-50 backdrop-blur-xl flex items-center justify-around px-1 transition-colors ${bgStyle}`}
     >
       {navItems.map((item) => {
         const Icon = item.icon;
@@ -32,19 +32,16 @@ const MobileBottomNav = () => {
             <button
               key={item.name}
               onClick={item.action}
-              className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1 transition-all group"
+              className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-all group active:scale-95"
               title="Identify Song (Shazam Radar)"
             >
-              <div
-                className={`px-3 py-1 rounded-full flex items-center gap-1 transition-all shadow-sm ${
-                  theme === 'light'
-                    ? 'bg-emerald-100 text-emerald-950 border border-emerald-300 group-hover:bg-emerald-200'
-                    : 'bg-white/10 text-white border border-white/15 group-hover:bg-white/20'
-                }`}
-              >
-                <Icon size={16} className="text-[#1ed760] animate-pulse" />
-                <span className="text-[11px] font-black">{item.name}</span>
+              <div className="relative flex items-center justify-center">
+                <Icon size={21} className="text-[#1ed760] animate-pulse group-hover:scale-110 transition-transform" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#1ed760] ring-2 ring-black" />
               </div>
+              <span className="text-[10px] tracking-tight font-extrabold text-[#1ed760]">
+                {item.name}
+              </span>
             </button>
           );
         }

@@ -159,24 +159,24 @@ const Search = () => {
   const cardBg = theme === 'light' ? 'bg-[#f0fdf4] border border-emerald-200 hover:bg-emerald-100/80 shadow-sm' : 'bg-[#181818] hover:bg-[#282828]';
 
   return (
-    <div className="p-8 pb-32 min-h-full">
+    <div className="p-4 sm:p-8 pb-36 min-h-full">
       {/* Search Header */}
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="flex flex-col gap-3 sm:gap-4 mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
           <div className="relative flex-1 max-w-lg">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-700">
-              <SearchIcon size={20} />
+            <div className="absolute inset-y-0 left-0 pl-3.5 sm:pl-4 flex items-center pointer-events-none text-emerald-700">
+              <SearchIcon size={18} />
             </div>
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className={`block w-full pl-11 pr-10 py-3 rounded-full text-sm font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-spotify-base transition-all ${
+              className={`block w-full pl-10 sm:pl-11 pr-10 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold shadow-md focus:outline-none focus:ring-2 focus:ring-spotify-base transition-all ${
                 theme === 'light'
                   ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 placeholder-emerald-700'
                   : 'bg-white text-black placeholder-gray-500'
               }`}
-              placeholder="Search Dhurandhar, Chennai Express, MS Dhoni, Romance, Party..."
+              placeholder="Search songs, movies, artists..."
               autoFocus
             />
             {query && (
@@ -192,11 +192,12 @@ const Search = () => {
           {/* Identify Song (Shazam) button next to search bar */}
           <button
             onClick={openIdentifierModal}
-            className="flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-sm shadow-md hover:scale-105 transition-all group"
+            className="flex items-center justify-center gap-1.5 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 transition-all flex-shrink-0 group"
             title="Identify Song (Shazam / Radar)"
           >
-            <Radio size={18} className="animate-pulse group-hover:scale-110 transition-transform" />
-            <span>Identify Song</span>
+            <Radio size={16} className="animate-pulse group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">Identify Song</span>
+            <span className="sm:hidden">Identify</span>
           </button>
         </div>
 
@@ -204,26 +205,26 @@ const Search = () => {
         {!query && (
           <div
             onClick={openIdentifierModal}
-            className={`cursor-pointer flex items-center justify-between p-4 rounded-2xl border transition-all hover:scale-[1.01] shadow-sm ${
+            className={`cursor-pointer flex items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all hover:scale-[1.01] shadow-sm ${
               theme === 'light'
                 ? 'bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-emerald-300 hover:border-emerald-400'
                 : 'bg-gradient-to-r from-emerald-900/30 via-teal-900/20 to-black/40 border-white/10 hover:border-emerald-500/50'
             }`}
           >
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-full bg-[#1ed760] text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Radio size={22} className="animate-pulse" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#1ed760] text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                <Radio size={20} className="animate-pulse" />
               </div>
-              <div>
-                <h4 className={`text-sm font-black ${theme === 'light' ? 'text-emerald-950' : 'text-white'}`}>
-                  Heard a song nearby? Identify with Shubify Shazam
+              <div className="min-w-0">
+                <h4 className={`text-xs sm:text-sm font-black truncate ${theme === 'light' ? 'text-emerald-950' : 'text-white'}`}>
+                  Heard a song nearby? Identify with Shazam
                 </h4>
-                <p className={`text-xs ${theme === 'light' ? 'text-emerald-700 font-medium' : 'text-gray-400'}`}>
-                  Tap here to listen to music playing around you or hum a tune
+                <p className={`text-[11px] sm:text-xs truncate ${theme === 'light' ? 'text-emerald-700 font-medium' : 'text-gray-400'}`}>
+                  Tap here to listen to music playing around you
                 </p>
               </div>
             </div>
-            <div className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs shadow-md transition-all">
+            <div className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-xs shadow-md transition-all flex-shrink-0">
               <Radio size={14} />
               <span>Tap to Identify</span>
             </div>

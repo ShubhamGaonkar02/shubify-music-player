@@ -147,31 +147,31 @@ const MusicPlayer = () => {
 
       {/* FULL-SCREEN / EXPANDED NOW PLAYING VIEW */}
       {isExpanded && (
-        <div className="fixed inset-0 z-[100] bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
+        <div className="fixed inset-0 z-[100] bg-gradient-to-b from-[#065f46] via-[#09090b] to-[#040405] text-white flex flex-col justify-between p-4 sm:p-6 md:p-12 animate-fade-in-up backdrop-blur-3xl overflow-y-auto">
           {/* Header Drag Down Control */}
           <div className="flex items-center justify-between w-full max-w-4xl mx-auto">
             <button
               onClick={() => setIsExpanded(false)}
-              className="p-2.5 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110 flex items-center gap-1 font-bold text-xs"
+              className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110 flex items-center gap-1 font-bold text-xs"
               title="Collapse Player"
             >
               <ChevronDown size={20} />
-              <span>Minimize</span>
+              <span className="hidden sm:inline">Minimize</span>
             </button>
-            <div className="text-center">
+            <div className="text-center px-2">
               <span className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-spotify-base">
                 Now Playing from Shubify
               </span>
-              <p className="text-xs sm:text-sm font-bold text-gray-300 truncate max-w-[160px] sm:max-w-xs md:max-w-md">
+              <p className="text-xs sm:text-sm font-bold text-gray-300 truncate max-w-[140px] sm:max-w-xs md:max-w-md">
                 {currentTrack.album?.name || 'Bollywood Hits'}
               </p>
             </div>
             <button
               onClick={() => toggleLikeTrack(currentTrack)}
-              className="p-2.5 sm:p-3 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110"
+              className="p-2 sm:p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-all hover:scale-110"
             >
               <Heart
-                size={22}
+                size={20}
                 fill={isLiked(currentTrack?.id) ? '#1db954' : 'none'}
                 className={isLiked(currentTrack?.id) ? 'text-spotify-base animate-pulse' : 'text-white'}
               />
@@ -179,25 +179,25 @@ const MusicPlayer = () => {
           </div>
 
           {/* Large Spinning Vinyl Art Center */}
-          <div className="flex flex-col items-center justify-center my-4 sm:my-6 max-w-4xl mx-auto w-full">
-            <div className="relative mb-6 sm:mb-8">
+          <div className="flex flex-col items-center justify-center my-3 sm:my-6 max-w-4xl mx-auto w-full">
+            <div className="relative mb-4 sm:mb-8">
               <div
-                className={`w-52 h-52 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-full shadow-2xl overflow-hidden relative ring-8 ring-spotify-base/30 transition-transform ${
+                className={`w-44 h-44 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full shadow-2xl overflow-hidden relative ring-4 sm:ring-8 ring-spotify-base/30 transition-transform ${
                   isPlaying ? 'animate-spin-slow ring-spotify-base/60' : 'ring-white/10'
                 }`}
               >
                 <img src={albumArt} alt={currentTrack.name} className="w-full h-full object-cover rounded-full" />
                 {/* Vinyl Center Spindle */}
-                <div className="absolute inset-0 m-auto w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-full border-4 border-white/40 shadow-2xl flex items-center justify-center pointer-events-none">
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-spotify-base rounded-full" />
+                <div className="absolute inset-0 m-auto w-8 h-8 sm:w-12 sm:h-12 bg-black rounded-full border-2 sm:border-4 border-white/40 shadow-2xl flex items-center justify-center pointer-events-none">
+                  <div className="w-2.5 h-2.5 sm:w-4 sm:h-4 bg-spotify-base rounded-full" />
                 </div>
               </div>
             </div>
 
             {/* Song Title & Equalizer */}
-            <div className="text-center max-w-lg px-4">
-              <div className="flex items-center justify-center gap-2 sm:gap-3">
-                <h1 className="text-xl sm:text-4xl font-black tracking-tight text-white line-clamp-1">
+            <div className="text-center max-w-lg px-2">
+              <div className="flex items-center justify-center gap-2">
+                <h1 className="text-lg sm:text-3xl font-black tracking-tight text-white line-clamp-1">
                   {currentTrack.name}
                 </h1>
                 {isPlaying && (
@@ -302,12 +302,20 @@ const MusicPlayer = () => {
       )}
 
       {/* MINI PLAYER BAR */}
-      <div className={`h-full flex items-center justify-between px-3 md:px-4 relative ${playerBg}`}>
-        {/* CENTERED TOP EXPAND DRAG HANDLE BUTTON */}
+      <div className={`h-full flex items-center justify-between px-3 md:px-4 relative select-none ${playerBg}`}>
+        {/* Top Mini Progress Bar (Visible on mobile & desktop) */}
+        <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-black/10 overflow-hidden">
+          <div
+            className="h-full bg-spotify-base transition-all duration-100"
+            style={{ width: `${played * 100}%` }}
+          />
+        </div>
+
+        {/* Desktop Expand Button */}
         <button
           onClick={() => setIsExpanded(true)}
-          className="absolute -top-3 left-1/2 -translate-x-1/2 bg-spotify-base hover:bg-spotify-highlight text-black text-[10px] sm:text-xs font-black px-3 sm:px-4 py-0.5 rounded-full shadow-xl border border-black/20 flex items-center gap-1 hover:scale-110 transition-all z-20"
-          title="Click to Drag Up / View Full Screen Now Playing"
+          className="hidden md:flex absolute -top-3 left-1/2 -translate-x-1/2 bg-spotify-base hover:bg-spotify-highlight text-black text-[10px] sm:text-xs font-black px-3 sm:px-4 py-0.5 rounded-full shadow-xl border border-black/20 items-center gap-1 hover:scale-110 transition-all z-20"
+          title="Click to View Full Screen Now Playing"
         >
           <ChevronUp size={12} className="animate-bounce" />
           <span>EXPAND</span>
@@ -315,7 +323,11 @@ const MusicPlayer = () => {
         </button>
 
         {/* Left: Track Info & Artwork */}
-        <div className="flex items-center gap-2.5 sm:gap-4 flex-1 md:w-1/3 min-w-0 pr-2">
+        <div
+          onClick={() => setIsExpanded(true)}
+          className="flex items-center gap-2.5 sm:gap-4 flex-1 md:w-1/3 min-w-0 pr-2 cursor-pointer group"
+          title="Tap to expand Now Playing"
+        >
           <div
             onClick={() => setIsExpanded(true)}
             className={`w-11 h-11 sm:w-14 sm:h-14 bg-[#282828] flex-shrink-0 rounded-full shadow-lg overflow-hidden relative group cursor-pointer transition-transform hover:scale-105 ${

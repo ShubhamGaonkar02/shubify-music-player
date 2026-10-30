@@ -236,8 +236,8 @@ const PlaylistView = () => {
       )}
 
       {/* Hero Banner */}
-      <div className={`${headerBg} p-8 flex flex-col md:flex-row items-end gap-6 shadow-sm transition-all`}>
-        <div className="w-52 h-52 bg-[#282828] rounded-xl shadow-2xl overflow-hidden flex-shrink-0 relative group ring-4 ring-black/10">
+      <div className={`${headerBg} p-4 sm:p-8 flex flex-col md:flex-row items-center md:items-end text-center md:text-left gap-4 sm:gap-6 shadow-sm transition-all`}>
+        <div className="w-36 h-36 sm:w-52 sm:h-52 bg-[#282828] rounded-xl shadow-2xl overflow-hidden flex-shrink-0 relative group ring-4 ring-black/10">
           {meta.img ? (
             <img
               src={meta.img}
@@ -254,15 +254,15 @@ const PlaylistView = () => {
             </div>
           )}
         </div>
-        <div className={`flex flex-col gap-2 flex-1 min-w-0 ${theme === 'light' ? 'text-[#022c22]' : 'text-white'}`}>
-          <span className={`text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full w-max backdrop-blur-md border ${theme === 'light' ? 'bg-[#022c22] text-white border-[#047857]' : 'text-spotify-base bg-black/40 border-white/10'}`}>
+        <div className={`flex flex-col gap-1.5 sm:gap-2 flex-1 min-w-0 items-center md:items-start ${theme === 'light' ? 'text-[#022c22]' : 'text-white'}`}>
+          <span className={`text-[10px] sm:text-xs font-black uppercase tracking-wider px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full w-max backdrop-blur-md border ${theme === 'light' ? 'bg-[#022c22] text-white border-[#047857]' : 'text-spotify-base bg-black/40 border-white/10'}`}>
             {meta.isCustom ? 'User Playlist' : 'Album & Playlist'}
           </span>
-          <h1 className={`text-3xl md:text-5xl font-black tracking-tight truncate drop-shadow-sm ${theme === 'light' ? 'text-[#022c22]' : 'text-white'}`}>
+          <h1 className={`text-2xl sm:text-3xl md:text-5xl font-black tracking-tight drop-shadow-sm ${theme === 'light' ? 'text-[#022c22]' : 'text-white'}`}>
             {meta.title}
           </h1>
-          <p className={`text-sm line-clamp-2 mt-1 font-bold ${theme === 'light' ? 'text-[#047857]' : 'text-gray-200'}`}>{meta.desc}</p>
-          <p className={`text-xs mt-2 flex items-center gap-2 font-black ${theme === 'light' ? 'text-[#022c22]' : 'text-gray-300'}`}>
+          <p className={`text-xs sm:text-sm line-clamp-2 mt-0.5 font-bold ${theme === 'light' ? 'text-[#047857]' : 'text-gray-200'}`}>{meta.desc}</p>
+          <p className={`text-[11px] sm:text-xs mt-1 sm:mt-2 flex items-center gap-2 font-black ${theme === 'light' ? 'text-[#022c22]' : 'text-gray-300'}`}>
             <span>Shubify</span>
             <span>•</span>
             <span>{tracks.length} songs</span>
@@ -277,18 +277,18 @@ const PlaylistView = () => {
       </div>
 
       {/* Action Bar */}
-      <div className="p-8 pb-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="p-4 sm:p-8 pb-3 sm:pb-4 flex items-center justify-between">
+        <div className="flex items-center gap-3 sm:gap-4">
           {tracks.length > 0 && (
             <button
               onClick={handlePlayAll}
-              className="w-14 h-14 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-all"
+              className="w-12 h-12 sm:w-14 sm:h-14 bg-spotify-base hover:bg-spotify-highlight rounded-full flex items-center justify-center shadow-xl hover:scale-105 transition-all"
               title={isPlaying && tracks.some((t) => t.id === currentTrack?.id) ? 'Pause Playlist' : 'Play Playlist'}
             >
               {isPlaying && tracks.some((t) => t.id === currentTrack?.id) ? (
-                <Pause size={26} fill="black" className="text-black" />
+                <Pause size={22} fill="black" className="text-black" />
               ) : (
-                <Play size={26} fill="black" className="text-black ml-1" />
+                <Play size={22} fill="black" className="text-black ml-1" />
               )}
             </button>
           )}
@@ -297,11 +297,11 @@ const PlaylistView = () => {
           {!meta.isCustom && (
             <button
               onClick={handleSharePlaylist}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black transition-all hover:scale-105 shadow-lg border border-spotify-base bg-spotify-base hover:bg-spotify-highlight text-black"
+              className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-black transition-all hover:scale-105 shadow-lg border border-spotify-base bg-spotify-base hover:bg-spotify-highlight text-black"
               title="Share Playlist"
             >
-              {copied ? <Check size={16} className="text-black" /> : <Share2 size={16} className="text-black" />}
-              <span>{copied ? 'Link Copied!' : 'Share Playlist'}</span>
+              {copied ? <Check size={15} className="text-black" /> : <Share2 size={15} className="text-black" />}
+              <span>{copied ? 'Link Copied!' : 'Share'}</span>
             </button>
           )}
         </div>
@@ -312,16 +312,16 @@ const PlaylistView = () => {
               deletePlaylist(id);
               navigate('/');
             }}
-            className="text-gray-400 hover:text-red-500 text-sm font-bold flex items-center gap-2 transition-colors"
+            className="text-gray-400 hover:text-red-500 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-colors"
           >
-            <Trash2 size={18} /> Delete Playlist
+            <Trash2 size={16} /> Delete
           </button>
         )}
       </div>
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="flex items-center gap-3 text-spotify-base px-8 my-8 font-bold">
+        <div className="flex items-center gap-3 text-spotify-base px-4 sm:px-8 my-8 font-bold text-sm">
           <div className="w-5 h-5 border-2 border-spotify-base border-t-transparent rounded-full animate-spin" />
           <span>Loading all songs for {decodeURIComponent(id || '')}...</span>
         </div>
@@ -329,34 +329,34 @@ const PlaylistView = () => {
 
       {/* Playlist Songs Table */}
       {!loading && (
-        <div className="px-8 mb-12">
+        <div className="px-2 sm:px-8 mb-12">
           {tracks.length > 0 ? (
             <div className="w-full">
               {/* Table Header */}
-              <div className={`grid grid-cols-12 text-xs border-b pb-3 mb-4 px-4 uppercase tracking-wider ${tableHeaderColor}`}>
-                <span className="col-span-1">#</span>
-                <span className="col-span-6 md:col-span-5">Title</span>
+              <div className={`grid grid-cols-12 text-xs border-b pb-2.5 mb-3 px-2 sm:px-4 uppercase tracking-wider ${tableHeaderColor}`}>
+                <span className="hidden sm:block col-span-1">#</span>
+                <span className="col-span-9 sm:col-span-6 md:col-span-5">Title</span>
                 <span className="hidden md:block md:col-span-4">Album</span>
-                <span className="col-span-5 md:col-span-2 text-right flex items-center justify-end pr-2">
-                  <Clock size={16} />
+                <span className="col-span-3 sm:col-span-5 md:col-span-2 text-right flex items-center justify-end pr-2">
+                  <Clock size={15} />
                 </span>
               </div>
 
               {/* Song Rows */}
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1">
                 {tracks.map((track, index) => {
                   const isCurrent = currentTrack?.id === track.id;
                   const liked = isLiked(track.id);
                   return (
                     <div
                       key={track.id}
-                      className={`grid grid-cols-12 items-center p-3 rounded-lg ${rowHover} group cursor-pointer transition-all ${
+                      className={`grid grid-cols-12 items-center p-2 sm:p-3 rounded-xl ${rowHover} group cursor-pointer transition-all ${
                         isCurrent ? activeRow : ''
                       }`}
                     >
                       {/* Index / Play Button */}
                       <div
-                        className={`col-span-1 text-sm flex items-center ${indexColor}`}
+                        className={`hidden sm:flex col-span-1 text-sm items-center ${indexColor}`}
                         onClick={() => handlePlayTrack(index)}
                       >
                         <span className="group-hover:hidden">{index + 1}</span>
@@ -371,7 +371,7 @@ const PlaylistView = () => {
 
                       {/* Title & Artist */}
                       <div
-                        className="col-span-6 md:col-span-5 flex items-center gap-3.5 min-w-0"
+                        className="col-span-9 sm:col-span-6 md:col-span-5 flex items-center gap-2.5 sm:gap-3.5 min-w-0"
                         onClick={() => handlePlayTrack(index)}
                       >
                         <img

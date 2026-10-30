@@ -26,33 +26,33 @@ const Library = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
         {/* Create Playlist Tile */}
         <div
           onClick={openCreatePlaylistModal}
-          className={`border-2 border-dashed border-spotify-base/60 p-6 rounded-xl cursor-pointer hover:scale-[1.02] transition-transform shadow-md flex flex-col items-center justify-center min-h-[220px] text-center group ${
+          className={`border-2 border-dashed border-spotify-base/60 p-4 sm:p-6 rounded-xl cursor-pointer hover:scale-[1.02] transition-transform shadow-md flex flex-col items-center justify-center min-h-[160px] sm:min-h-[220px] text-center group ${
             theme === 'light' ? 'bg-emerald-50/70 hover:bg-emerald-100/80' : 'bg-spotify-base/10 hover:bg-spotify-base/20'
           }`}
         >
-          <div className="w-14 h-14 bg-spotify-base text-black rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-lg">
-            <Plus size={30} strokeWidth={3} />
+          <div className="w-10 h-10 sm:w-14 sm:h-14 bg-spotify-base text-black rounded-full flex items-center justify-center mb-2 sm:mb-3 group-hover:scale-110 transition-transform shadow-lg">
+            <Plus size={24} strokeWidth={3} className="sm:w-7 sm:h-7" />
           </div>
-          <h3 className={`font-black text-base ${titleColor}`}>Create Playlist</h3>
-          <p className="text-xs text-spotify-base font-bold mt-1">Build your own mix</p>
+          <h3 className={`font-black text-xs sm:text-base ${titleColor}`}>Create Playlist</h3>
+          <p className="text-[10px] sm:text-xs text-spotify-base font-bold mt-0.5 sm:mt-1">Build your own mix</p>
         </div>
 
         {/* Liked Songs Tile */}
         <div
           onClick={() => navigate('/liked')}
-          className="bg-gradient-to-br from-indigo-700 to-purple-800 p-6 rounded-xl cursor-pointer hover:scale-[1.02] transition-transform shadow-xl flex flex-col justify-end min-h-[220px] relative group"
+          className="bg-gradient-to-br from-indigo-700 to-purple-800 p-4 sm:p-6 rounded-xl cursor-pointer hover:scale-[1.02] transition-transform shadow-xl flex flex-col justify-end min-h-[160px] sm:min-h-[220px] relative group"
         >
-          <div className="absolute top-6 left-6 text-white">
-            <Heart size={36} fill="white" />
+          <div className="absolute top-4 sm:top-6 left-4 sm:left-6 text-white">
+            <Heart size={26} fill="white" className="sm:w-9 sm:h-9" />
           </div>
           <div>
-            <h2 className="text-3xl font-extrabold text-white mb-2">Liked Songs</h2>
-            <p className="text-sm font-semibold text-gray-200">
-              {likedSongs.length} liked {likedSongs.length === 1 ? 'song' : 'songs'}
+            <h2 className="text-xl sm:text-3xl font-extrabold text-white mb-1 sm:mb-2">Liked Songs</h2>
+            <p className="text-xs sm:text-sm font-semibold text-gray-200">
+              {likedSongs.length} {likedSongs.length === 1 ? 'song' : 'songs'}
             </p>
           </div>
         </div>
