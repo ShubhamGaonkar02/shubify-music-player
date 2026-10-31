@@ -679,7 +679,7 @@ const Home = () => {
                   <input
                     type="password"
                     autoFocus
-                    placeholder="Enter PIN (e.g. 2005)"
+                    placeholder="••••••••"
                     value={adminPasscode}
                     onChange={(e) => {
                       setAdminPasscode(e.target.value);
