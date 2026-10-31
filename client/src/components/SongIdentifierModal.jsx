@@ -33,8 +33,24 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
+  const audioContextRef = useRef(null);
+  const processorRef = useRef(null);
+  const pcmChunksRef = useRef([]);
+
   const stopAllAudio = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    if (processorRef.current) {
+      try {
+        processorRef.current.disconnect();
+      } catch (e) {}
+      processorRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       try {
         mediaRecorderRef.current.stop();
@@ -51,34 +67,59 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // 1. Audio Fingerprint Recognition (Shazam-style via AudD)
+  // 1. Audio Recognition (Direct 44.1kHz PCM for Shazam + WebM for AudD fallback)
   const startAudioListening = async () => {
     setStatus('listening');
     setErrorMessage('');
     setMatchedTrack(null);
     setCountdown(5);
     audioChunksRef.current = [];
+    pcmChunksRef.current = [];
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          channelCount: 1,
+          sampleRate: 44100,
+          echoCancellation: true,
+        },
+      });
       streamRef.current = stream;
 
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      // Direct Web Audio API PCM capture (bypasses browser WebM container encoding/decoding errors)
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        const audioCtx = new AudioContextClass({ sampleRate: 44100 });
+        audioContextRef.current = audioCtx;
+        const source = audioCtx.createMediaStreamSource(stream);
+        const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+        processorRef.current = processor;
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
+        processor.onaudioprocess = (e) => {
+          const channel = e.inputBuffer.getChannelData(0);
+          pcmChunksRef.current.push(new Float32Array(channel));
+        };
 
-      mediaRecorder.onstop = async () => {
-        setStatus('analyzing');
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await analyzeAudioBlob(audioBlob);
-      };
+        source.connect(processor);
+        processor.connect(audioCtx.destination);
+      } catch (audioCtxErr) {
+        console.warn('AudioContext direct PCM capture notice:', audioCtxErr);
+      }
 
-      mediaRecorder.start(250);
+      // MediaRecorder as backup audio blob
+      try {
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+        mediaRecorder.start(250);
+      } catch (recErr) {
+        console.warn('MediaRecorder notice:', recErr);
+      }
 
       let timeLeft = 5;
       timerRef.current = setInterval(() => {
@@ -86,13 +127,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
         setCountdown(timeLeft);
         if (timeLeft <= 0) {
           clearInterval(timerRef.current);
-          if (mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-          }
-          if (streamRef.current) {
-            streamRef.current.getTracks().forEach((t) => t.stop());
-            streamRef.current = null;
-          }
+          finishAudioCapture();
         }
       }, 1000);
     } catch (err) {
@@ -106,8 +141,135 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Send audio sample to AudD Music Recognition API
-  const analyzeAudioBlob = async (blob) => {
+  const finishAudioCapture = async () => {
+    setStatus('analyzing');
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {}
+    }
+    if (processorRef.current) {
+      try {
+        processorRef.current.disconnect();
+      } catch (e) {}
+      processorRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try {
+        audioContextRef.current.close();
+      } catch (e) {}
+      audioContextRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+
+    // Convert raw PCM float samples to 16-bit signed PCM (Little-Endian) Base64
+    let base64Audio = '';
+    const pcmChunks = pcmChunksRef.current;
+    if (pcmChunks.length > 0) {
+      const totalSamples = pcmChunks.reduce((acc, c) => acc + c.length, 0);
+      const maxSamples = Math.min(totalSamples, 44100 * 4.5);
+      const merged = new Float32Array(maxSamples);
+      let offset = 0;
+      for (const chunk of pcmChunks) {
+        if (offset >= maxSamples) break;
+        const toCopy = Math.min(chunk.length, maxSamples - offset);
+        merged.set(chunk.subarray(0, toCopy), offset);
+        offset += toCopy;
+      }
+
+      const pcmBuffer = new ArrayBuffer(merged.length * 2);
+      const view = new DataView(pcmBuffer);
+      for (let i = 0; i < merged.length; i++) {
+        const s = Math.max(-1, Math.min(1, merged[i]));
+        view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+
+      const bytes = new Uint8Array(pcmBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 8192) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 8192));
+      }
+      base64Audio = btoa(binary);
+    }
+
+    const audioBlob = new Blob(audioChunksRef.current, { type: audioChunksRef.current[0]?.type || 'audio/webm' });
+    await analyzeAudioData(base64Audio, audioBlob);
+  };
+
+  const handleMatchedTrack = async (title, subtitle, coverUrl) => {
+    const searchRes = await searchSpotify(`${title} ${subtitle}`);
+    const foundItem = searchRes?.tracks?.items?.[0];
+
+    if (foundItem) {
+      setMatchedTrack(foundItem);
+    } else {
+      setMatchedTrack({
+        id: `identified-${Date.now()}`,
+        name: title,
+        artists: [{ name: subtitle }],
+        album: {
+          name: 'Identified Track',
+          images: [{ url: coverUrl || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600' }],
+        },
+        duration_ms: 180000,
+      });
+    }
+    setStatus('found');
+  };
+
+  // Music Recognition: Uses Vercel Serverless proxy (bypassing CORS) with Shazam & AudD fallback
+  const analyzeAudioData = async (base64Audio, blob) => {
+    const rapidApiKey = import.meta.env.VITE_RAPIDAPI_KEY;
+
+    // 1. Try Vercel Serverless Proxy (/api/shazam-detect) - Bypasses browser CORS restrictions!
+    if (base64Audio) {
+      try {
+        const response = await axios.post('/api/shazam-detect', base64Audio, {
+          headers: { 'Content-Type': 'text/plain' },
+          timeout: 12000,
+        });
+
+        if (response.data?.matches?.length > 0 && response.data.track) {
+          const { title, subtitle, images, share } = response.data.track;
+          await handleMatchedTrack(title, subtitle, images?.coverart || share?.image);
+          return;
+        }
+      } catch (proxyErr) {
+        console.warn('Vercel Shazam proxy notice:', proxyErr?.response?.data || proxyErr?.message);
+      }
+
+      // 2. Direct RapidAPI call fallback (if key is in frontend)
+      if (rapidApiKey) {
+        try {
+          const response = await axios.post(
+            'https://shazam.p.rapidapi.com/songs/v2/detect',
+            base64Audio,
+            {
+              headers: {
+                'content-type': 'text/plain',
+                'X-RapidAPI-Key': rapidApiKey,
+                'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+              },
+              timeout: 12000,
+            }
+          );
+
+          if (response.data?.matches?.length > 0 && response.data.track) {
+            const { title, subtitle, images, share } = response.data.track;
+            await handleMatchedTrack(title, subtitle, images?.coverart || share?.image);
+            return;
+          }
+        } catch (shazamErr) {
+          console.warn('Direct Shazam call notice:', shazamErr?.message);
+        }
+      }
+    }
+
+    // 3. Fallback to AudD API
     try {
       const formData = new FormData();
       formData.append('file', blob);
@@ -121,36 +283,14 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
       });
 
       const data = response.data;
-
       if (data && data.status === 'success' && data.result) {
-        const { title, artist, album, song_link } = data.result;
-
-        // Search on Shubify so we get full playback integration with YouTube resolver
-        const searchRes = await searchSpotify(`${title} ${artist}`);
-        const foundItem = searchRes?.tracks?.items?.[0];
-
-        if (foundItem) {
-          setMatchedTrack(foundItem);
-        } else {
-          // Fallback constructed track object
-          setMatchedTrack({
-            id: `identified-${Date.now()}`,
-            name: title,
-            artists: [{ name: artist }],
-            album: {
-              name: album || 'Identified Track',
-              images: [{ url: data.result.apple_music?.artwork?.url?.replace('{w}x{h}', '600x600') || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600' }],
-            },
-            duration_ms: 180000,
-          });
-        }
-        setStatus('found');
+        const { title, artist, album } = data.result;
+        await handleMatchedTrack(title, artist, data.result.apple_music?.artwork?.url?.replace('{w}x{h}', '600x600'));
       } else {
         setStatus('not_found');
       }
     } catch (err) {
-      console.warn('AudD API Notice:', err);
-      // If network/token limit, provide graceful fallback
+      console.warn('Audio recognition fallback error:', err);
       setStatus('not_found');
     }
   };
@@ -503,7 +643,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
         {/* Footer info badge */}
         <div className={`pt-3 border-t flex items-center justify-center gap-2 text-[10px] font-semibold ${isLight ? 'border-slate-100 text-slate-400' : 'border-white/5 text-gray-500'}`}>
           <Sparkles size={12} className="text-[#1ed760]" />
-          <span>Powered by AudD Audio Recognition & Shubify Stream Engine</span>
+          <span>Powered by Shazam Radar & Shubify Stream Engine</span>
         </div>
       </div>
     </div>
