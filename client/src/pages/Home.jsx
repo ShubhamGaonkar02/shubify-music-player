@@ -21,8 +21,7 @@ const Home = () => {
   const handleUnlockAdmin = (e) => {
     if (e) e.preventDefault();
     if (
-      adminPasscode.trim() === '2005' ||
-      adminPasscode.trim() === 'shubham' ||
+      adminPasscode.trim() === '0205' ||
       user?.primaryEmailAddress?.emailAddress === 'shubhamgaonkar2005@gmail.com'
     ) {
       setIsAdminUnlocked(true);
