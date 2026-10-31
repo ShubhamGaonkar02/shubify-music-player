@@ -106,8 +106,107 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Send audio sample to AudD Music Recognition API
+  // Convert recorded browser audio Blob to 44100Hz 16-bit Mono Raw PCM Base64 for Shazam
+  const convertBlobToRawPCMBase64 = async (blob) => {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) {
+      throw new Error('AudioContext not supported');
+    }
+
+    const audioContext = new AudioContextClass();
+    const arrayBuffer = await blob.arrayBuffer();
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    try {
+      await audioContext.close();
+    } catch (e) {}
+
+    // Shazam recommends 44.1kHz mono raw PCM, 3-5 seconds
+    const targetSampleRate = 44100;
+    const duration = Math.min(audioBuffer.duration, 4.5);
+    const totalSamples = Math.floor(duration * targetSampleRate);
+
+    const OfflineContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const offlineCtx = new OfflineContextClass(1, totalSamples, targetSampleRate);
+
+    const source = offlineCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineCtx.destination);
+    source.start(0);
+
+    const renderedBuffer = await offlineCtx.startRendering();
+    const channelData = renderedBuffer.getChannelData(0);
+
+    // Convert Float32Array [-1.0, 1.0] to 16-bit signed integer PCM (Little-Endian)
+    const pcmBuffer = new ArrayBuffer(channelData.length * 2);
+    const view = new DataView(pcmBuffer);
+    for (let i = 0; i < channelData.length; i++) {
+      const s = Math.max(-1, Math.min(1, channelData[i]));
+      view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+
+    // Convert raw PCM bytes to Base64
+    const bytes = new Uint8Array(pcmBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  };
+
+  // Music Recognition: Uses Shazam (via RapidAPI, 500 free requests/mo) with AudD fallback
   const analyzeAudioBlob = async (blob) => {
+    const rapidApiKey = import.meta.env.VITE_RAPIDAPI_KEY;
+
+    // 1. Try Shazam RapidAPI first
+    if (rapidApiKey) {
+      try {
+        const base64Audio = await convertBlobToRawPCMBase64(blob);
+        const response = await axios.post(
+          'https://shazam.p.rapidapi.com/songs/v2/detect',
+          base64Audio,
+          {
+            headers: {
+              'content-type': 'text/plain',
+              'X-RapidAPI-Key': rapidApiKey,
+              'X-RapidAPI-Host': 'shazam.p.rapidapi.com',
+            },
+            timeout: 12000,
+          }
+        );
+
+        if (response.data?.matches?.length > 0 && response.data.track) {
+          const { title, subtitle, images, share } = response.data.track;
+
+          // Search on Spotify so playback seamlessly hooks into Shubify's stream engine
+          const searchRes = await searchSpotify(`${title} ${subtitle}`);
+          const foundItem = searchRes?.tracks?.items?.[0];
+
+          if (foundItem) {
+            setMatchedTrack(foundItem);
+          } else {
+            setMatchedTrack({
+              id: `identified-${Date.now()}`,
+              name: title,
+              artists: [{ name: subtitle }],
+              album: {
+                name: 'Identified Track',
+                images: [{
+                  url: images?.coverart || share?.image || 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=600&h=600'
+                }],
+              },
+              duration_ms: 180000,
+            });
+          }
+          setStatus('found');
+          return;
+        }
+      } catch (shazamErr) {
+        console.warn('Shazam RapidAPI attempt failed, falling back to AudD:', shazamErr);
+      }
+    }
+
+    // 2. Fallback to AudD API
     try {
       const formData = new FormData();
       formData.append('file', blob);
@@ -123,7 +222,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
       const data = response.data;
 
       if (data && data.status === 'success' && data.result) {
-        const { title, artist, album, song_link } = data.result;
+        const { title, artist, album } = data.result;
 
         // Search on Shubify so we get full playback integration with YouTube resolver
         const searchRes = await searchSpotify(`${title} ${artist}`);
@@ -132,7 +231,6 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
         if (foundItem) {
           setMatchedTrack(foundItem);
         } else {
-          // Fallback constructed track object
           setMatchedTrack({
             id: `identified-${Date.now()}`,
             name: title,
@@ -149,8 +247,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
         setStatus('not_found');
       }
     } catch (err) {
-      console.warn('AudD API Notice:', err);
-      // If network/token limit, provide graceful fallback
+      console.warn('Audio recognition error:', err);
       setStatus('not_found');
     }
   };
@@ -503,7 +600,7 @@ const SongIdentifierModal = ({ isOpen, onClose }) => {
         {/* Footer info badge */}
         <div className={`pt-3 border-t flex items-center justify-center gap-2 text-[10px] font-semibold ${isLight ? 'border-slate-100 text-slate-400' : 'border-white/5 text-gray-500'}`}>
           <Sparkles size={12} className="text-[#1ed760]" />
-          <span>Powered by AudD Audio Recognition & Shubify Stream Engine</span>
+          <span>Powered by Shazam Radar & Shubify Stream Engine</span>
         </div>
       </div>
     </div>
