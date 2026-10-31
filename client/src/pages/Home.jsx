@@ -3,13 +3,42 @@ import { searchSpotify } from '../api/spotify';
 import { usePlayerStore } from '../store/playerStore';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { Play, Heart, Globe, Linkedin, Github, Mail, Radio } from 'lucide-react';
+import { Play, Heart, Globe, Linkedin, Github, Mail, Radio, Lock, Unlock, Users, Zap, ExternalLink, X, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 
 const Home = () => {
   const { playTrackList, theme, openIdentifierModal } = usePlayerStore();
   const { user } = useAuthStore();
   const navigate = useNavigate();
+
+  const [isAdminUnlocked, setIsAdminUnlocked] = useState(() => {
+    return sessionStorage.getItem('shubify_admin_unlocked') === 'true';
+  });
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPasscode, setAdminPasscode] = useState('');
+  const [adminError, setAdminError] = useState('');
+
+  const handleUnlockAdmin = (e) => {
+    if (e) e.preventDefault();
+    if (
+      adminPasscode.trim() === '2005' ||
+      adminPasscode.trim() === 'shubham' ||
+      user?.primaryEmailAddress?.emailAddress === 'shubhamgaonkar2005@gmail.com'
+    ) {
+      setIsAdminUnlocked(true);
+      sessionStorage.setItem('shubify_admin_unlocked', 'true');
+      setAdminError('');
+      setAdminPasscode('');
+    } else {
+      setAdminError('Incorrect passcode. Please try again.');
+    }
+  };
+
+  const handleLockAdmin = () => {
+    setIsAdminUnlocked(false);
+    sessionStorage.removeItem('shubify_admin_unlocked');
+    setShowAdminModal(false);
+  };
 
   const [moviePosters, setMoviePosters] = useState({
     Dhurandhar: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=600&h=600',
@@ -497,12 +526,201 @@ const Home = () => {
           </a>
         </div>
 
+        {/* Unlocked Admin Quick Bar */}
+        {isAdminUnlocked && (
+          <div className="flex flex-wrap items-center justify-center gap-2.5 p-2 px-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 animate-fadeIn mt-1 shadow-md">
+            <span className="text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 mr-1">
+              <Unlock size={13} className="text-emerald-400" />
+              <span>Owner Panel:</span>
+            </span>
+
+            <a
+              href="https://dashboard.clerk.com/apps/app_3LM8IsFyDF7RsBl8afT3wWaTY7y/instances/ins_3LM8IriNmKIbmaYcb9McDBR3ayN?users_columnOrder=username&users_hiddenColumns=phone_number"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-[#1ed760] hover:bg-[#1fdf64] text-black shadow transition-all hover:scale-105"
+            >
+              <Users size={13} />
+              <span>Clerk Users</span>
+              <ExternalLink size={11} />
+            </a>
+
+            <a
+              href="https://rapidapi.com/developer/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-[#1ed760] hover:bg-[#1fdf64] text-black shadow transition-all hover:scale-105"
+            >
+              <Zap size={13} />
+              <span>Shazam Tokens</span>
+              <ExternalLink size={11} />
+            </a>
+
+            <button
+              onClick={handleLockAdmin}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-bold text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors"
+              title="Lock Panel"
+            >
+              <Lock size={12} />
+              <span>Lock</span>
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-[11px] sm:text-xs font-bold mt-1">
           <span className="text-spotify-base font-black">Shubify – Ad-Free Music Player</span>
           <span className="hidden sm:inline">•</span>
           <span className={subTextColor}>© 2026 All rights reserved</span>
+          <span className="hidden sm:inline">•</span>
+          <button
+            onClick={() => setShowAdminModal(true)}
+            className="flex items-center gap-1 text-[11px] font-semibold text-gray-400 hover:text-[#1ed760] transition-colors opacity-70 hover:opacity-100 cursor-pointer"
+            title="Owner Admin Access"
+          >
+            {isAdminUnlocked ? <Unlock size={12} className="text-[#1ed760]" /> : <Lock size={12} />}
+            <span>{isAdminUnlocked ? 'Admin Unlocked' : 'Admin'}</span>
+          </button>
         </div>
       </footer>
+
+      {/* OWNER ADMIN LOCK MODAL */}
+      {showAdminModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className={`w-full max-w-md rounded-3xl p-6 sm:p-7 relative shadow-2xl border transition-all ${
+              theme === 'light'
+                ? 'bg-white border-emerald-200 text-slate-900 shadow-[0_20px_50px_rgba(29,185,84,0.15)]'
+                : 'bg-[#121214] border-white/10 text-white shadow-2xl'
+            }`}
+          >
+            <button
+              onClick={() => {
+                setShowAdminModal(false);
+                setAdminError('');
+                setAdminPasscode('');
+              }}
+              className={`absolute top-5 right-5 p-2 rounded-full transition-colors ${
+                theme === 'light' ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-gray-400 hover:text-white'
+              }`}
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex flex-col items-center text-center mb-5">
+              <div className="w-14 h-14 rounded-2xl bg-[#1ed760]/15 text-[#1ed760] flex items-center justify-center mb-3">
+                {isAdminUnlocked ? <ShieldCheck size={28} /> : <Lock size={28} />}
+              </div>
+              <h3 className="text-xl font-black">
+                {isAdminUnlocked ? 'Owner Admin Panel' : 'Owner Verification'}
+              </h3>
+              <p className={`text-xs mt-1 max-w-xs ${subTextColor}`}>
+                {isAdminUnlocked
+                  ? 'Access your live Clerk users and RapidAPI Shazam token usage'
+                  : 'Enter passcode to access Clerk users and Shazam token consumption'}
+              </p>
+            </div>
+
+            {isAdminUnlocked ? (
+              <div className="space-y-3">
+                <a
+                  href="https://dashboard.clerk.com/apps/app_3LM8IsFyDF7RsBl8afT3wWaTY7y/instances/ins_3LM8IriNmKIbmaYcb9McDBR3ayN?users_columnOrder=username&users_hiddenColumns=phone_number"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 hover:from-emerald-500/25 hover:to-emerald-500/10 border border-emerald-500/30 flex items-center justify-between transition-all group shadow"
+                >
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-10 h-10 rounded-xl bg-[#1ed760] text-black flex items-center justify-center font-black">
+                      <Users size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black flex items-center gap-1.5">
+                        <span>Clerk Users Dashboard</span>
+                        <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                      </h4>
+                      <p className={`text-[11px] ${subTextColor}`}>View registered users, logins & accounts</p>
+                    </div>
+                  </div>
+                </a>
+
+                <a
+                  href="https://rapidapi.com/developer/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full p-4 rounded-2xl bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 hover:from-emerald-500/25 hover:to-emerald-500/10 border border-emerald-500/30 flex items-center justify-between transition-all group shadow"
+                >
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="w-10 h-10 rounded-xl bg-[#1ed760] text-black flex items-center justify-center font-black">
+                      <Zap size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black flex items-center gap-1.5">
+                        <span>Shazam Token Dashboard</span>
+                        <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                      </h4>
+                      <p className={`text-[11px] ${subTextColor}`}>Check 500 monthly requests consumed & latency</p>
+                    </div>
+                  </div>
+                </a>
+
+                <button
+                  onClick={handleLockAdmin}
+                  className="w-full mt-2 py-2.5 rounded-full border border-red-500/30 hover:bg-red-500/10 text-red-400 font-extrabold text-xs flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Lock size={14} />
+                  <span>Lock Admin Panel</span>
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleUnlockAdmin} className="space-y-4">
+                <div>
+                  <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${textColor}`}>
+                    Enter Passcode
+                  </label>
+                  <input
+                    type="password"
+                    autoFocus
+                    placeholder="Enter PIN (e.g. 2005)"
+                    value={adminPasscode}
+                    onChange={(e) => {
+                      setAdminPasscode(e.target.value);
+                      setAdminError('');
+                    }}
+                    className={`w-full px-4 py-3 rounded-xl border text-sm font-bold tracking-wider outline-none transition-all ${
+                      theme === 'light'
+                        ? 'bg-slate-50 border-slate-300 text-slate-900 focus:border-[#1ed760]'
+                        : 'bg-white/5 border-white/10 text-white focus:border-[#1ed760]'
+                    }`}
+                  />
+                  {adminError && <p className="text-xs text-rose-500 font-bold mt-1.5">{adminError}</p>}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-[#1ed760] hover:bg-[#1fdf64] text-black font-extrabold text-sm py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+                  >
+                    <Unlock size={16} />
+                    <span>Unlock</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowAdminModal(false);
+                      setAdminError('');
+                      setAdminPasscode('');
+                    }}
+                    className={`px-4 py-3 rounded-xl border text-xs font-bold transition-colors ${
+                      theme === 'light' ? 'border-slate-300 hover:bg-slate-100 text-slate-600' : 'border-white/10 hover:bg-white/10 text-gray-300'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
